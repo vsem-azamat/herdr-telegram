@@ -11,9 +11,13 @@ const (
 	AgentStatusUnknown AgentStatus = "unknown"
 )
 
-// PromptOptions controls optional server-side waiting after prompt submission.
+// PromptOptions controls expected-session dispatch and optional server-side waiting.
 type PromptOptions struct {
-	Wait *PromptWait `json:"wait,omitempty"`
+	// ExpectedSession asks a capable server to compare the complete native session
+	// identity atomically with prompt submission. Callers must first require the
+	// AgentPromptExpectedSession capability because older servers may ignore this field.
+	ExpectedSession *AgentSession `json:"expected_session,omitempty"`
+	Wait            *PromptWait   `json:"wait,omitempty"`
 }
 
 // PromptWait asks Herdr to observe agent lifecycle state after prompt submission.

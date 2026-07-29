@@ -1,6 +1,6 @@
 # Herdr atomic expected-session contract spike
 
-> Status: upstream blocker confirmed on 2026-07-29. This document specifies a proposed contract; it does not describe a Herdr feature that exists today.
+> Status: still unavailable in ordinary upstream Herdr. A temporary personal fork implements the proposed contract for development and disposable validation; it is not an upstream release or production approval.
 
 ## Scope and safety boundary
 
@@ -25,7 +25,7 @@ The review used a separate read-only checkout of [`ogulcancelik/herdr`](https://
 | Development protocol | [18](https://github.com/ogulcancelik/herdr/blob/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965/src/protocol/wire.rs#L15-L16) |
 | Review time | 2026-07-29 UTC |
 
-The current generated schema and Rust request type expose only `target`, `text`, and optional `wait`:
+At the audited upstream commit, the generated schema and Rust request type exposed only `target`, `text`, and optional `wait`:
 
 - [`AgentPromptParams`](https://github.com/ogulcancelik/herdr/blob/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965/src/api/schema/agents.rs#L175-L181);
 - [generated development JSON schema](https://github.com/ogulcancelik/herdr/blob/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965/docs/next/api/herdr-api.schema.json#L1225-L1254);
@@ -33,7 +33,15 @@ The current generated schema and Rust request type expose only `target`, `text`,
 
 The handler resolves `target`, checks the detected agent/runtime, and sends input. It does not accept or compare `AgentInfo.agent_session`. Protocol 18 therefore does not add the required contract.
 
-The optional `wait` does not close the dispatch race. Its pre-submit `agent.get` is a separate operation, and its identity check pins terminal/name/agent label rather than the native `agent_session` tuple. It also observes lifecycle state and does not correlate completion to the submitted turn. See [`prompt_agent`](https://github.com/ogulcancelik/herdr/blob/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965/src/api/wait.rs#L176-L304) and [`agent_wait_identity_matches`](https://github.com/ogulcancelik/herdr/blob/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965/src/api/wait.rs#L524-L538).
+The optional `wait` did not close the dispatch race. Its pre-submit `agent.get` was a separate operation, and its identity check pinned terminal/name/agent label rather than the native `agent_session` tuple. It also observes lifecycle state and does not correlate completion to the submitted turn. See [`prompt_agent`](https://github.com/ogulcancelik/herdr/blob/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965/src/api/wait.rs#L176-L304) and [`agent_wait_identity_matches`](https://github.com/ogulcancelik/herdr/blob/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965/src/api/wait.rs#L524-L538).
+
+## Temporary fork implementation
+
+With explicit owner approval, the contract was implemented in the personal [`vsem-azamat/herdr` fork](https://github.com/vsem-azamat/herdr) at commit [`b610183d`](https://github.com/vsem-azamat/herdr/commit/b610183dd9a4424d61ad96c062cef8cb99839759) and opened as [fork-only draft PR #1](https://github.com/vsem-azamat/herdr/pull/1). The fork advertises `agent_prompt_expected_session`, compares the complete native identity before input, returns `agent_session_mismatch`, and pins waits to the native session. Its full `just check` passed, including deterministic serialized replacement-order and no-input-on-rejection tests. A side-by-side installed binary also advertised the capability in a disposable socket smoke test; the system Herdr binary was not replaced.
+
+This fork is temporary development infrastructure. It does not establish upstream acceptance, and clients must never select the behavior by version or fork name. They must require the capability. Reading provider IDs directly from Codex, Claude, or Pi files/processes is not an alternative: those IDs identify session history but do not provide an atomic input endpoint, so pane occupant replacement remains racy.
+
+The redacted [`herdr-expected-session-live-probe.md`](herdr-expected-session-live-probe.md) now records a disposable end-to-end probe through the Go SDK: capability absence failed closed on ordinary v0.7.5, while the fork accepted a matching unfocused-pane prompt, rejected session A after replacement by B without rejected input, and prevented B from satisfying A's wait. The separate plugin/systemd and Telegram prerequisite families remain open, and lifecycle status is still not completion evidence correlated to a particular turn. Production routing remains disabled.
 
 ## Minimal backward-compatible extension
 
@@ -158,15 +166,15 @@ The tests must observe the terminal/runtime input queue directly and assert abse
 
 ## Bridge consequence
 
-Until an upstream release advertises the capability and passes the race suite above, this project must retain all current blocks:
+Until an implementing server advertises the capability, passes the race suite above, and the other Phase 0 gates are complete, this project must retain all current blocks. During development that implementing server may be the temporary personal fork; a release must clearly disclose that dependency until ordinary upstream Herdr ships an equivalent contract.
 
 - no automatic Telegram-to-agent prompt routing;
 - no focused-pane fallback;
 - no claim that protocol 18 is safer than protocol 17 for stable-session dispatch;
 - no automatic retry after an ambiguous prompt outcome.
 
-After upstream support exists, this repository still needs redacted live fixtures against a disposable server and an SDK/adapter change that requires the capability. The `PromptWait` turn-correlation limitation must remain documented and separately resolved before completion evidence is used to release queued turns.
+Before product routing, this repository still needs redacted live fixtures against a disposable server and an internal adapter that requires the capability. The SDK now models the wire field but does not itself own bridge startup policy. The `PromptWait` turn-correlation limitation must remain documented and separately resolved before completion evidence is used to release queued turns.
 
 ## Upstream publication status
 
-With explicit owner approval, the contract gap was published as [Herdr Discussion #2016: Allow `agent.prompt` to check the expected session ID](https://github.com/ogulcancelik/herdr/discussions/2016). This is a direction request, not an accepted contract or implementation. Do not create an upstream issue, fork, implementation branch, or pull request without separate explicit owner approval and maintainer alignment.
+With explicit owner approval, the contract gap was published as [Herdr Discussion #2016: Allow `agent.prompt` to check the expected session ID](https://github.com/ogulcancelik/herdr/discussions/2016). It remains a direction request rather than an accepted upstream contract. The authorized personal fork and fork-only draft PR are documented above. Do not create an issue or PR against `ogulcancelik/herdr` without separate explicit owner approval and maintainer alignment.

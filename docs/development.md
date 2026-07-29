@@ -49,6 +49,17 @@ make check        # complete CI-equivalent validation
 - Use `httptest` for HTTP boundaries and focused fuzz tests for protocol parsers.
 - Keep race tests in the full gate; publish coverage for visibility before setting percentage gates.
 
+## Opt-in disposable Herdr contract probe
+
+The normal suite skips the live expected-session test. Run it only against a disposable capability-advertising binary; the test creates its own config, socket, workspaces, fake agent process, and session reports:
+
+```text
+HERDR_EXPECTED_SESSION_BIN="$HOME/.local/bin/herdr-expected-session" \
+  go test ./herdr -run '^TestExpectedSessionForkLive$' -v
+```
+
+Do not point this probe at an active user Herdr process or production agent session. The test first requires the capability and uses only its temporary socket endpoint.
+
 ## Validation style
 
 Do not add a general validation framework by default.

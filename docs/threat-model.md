@@ -89,7 +89,7 @@ Herdr plugins run as the local user and are not sandboxed. Local compromise is o
 - stable `AgentSessionKey` is canonical;
 - `pane_id` is only an in-memory route;
 - snapshot reconciliation;
-- server-side atomic expected-session condition at dispatch; a local read-then-prompt check is explicitly insufficient;
+- server-side atomic expected-session condition at dispatch, guarded by an affirmative capability check because older servers may ignore the field; a local read-then-prompt or provider-ID scraping check is explicitly insufficient;
 - route and daemon fencing generations;
 - no focused-pane or agent-name fallback;
 - duplicate live routes quarantine the binding.

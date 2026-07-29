@@ -17,7 +17,8 @@ import (
 
 const defaultMaxMessageBytes int64 = 8 << 20
 
-// ProtocolVersion is the Herdr protocol revision modeled by this package.
+// ProtocolVersion is the oldest Herdr protocol baseline modeled by this package.
+// Optional capability-gated fields may be available on newer servers.
 const ProtocolVersion uint32 = 17
 
 // ErrMessageTooLarge reports an NDJSON response above the configured limit.
@@ -65,8 +66,9 @@ func NewClient(socketPath string, options ...Option) (*Client, error) {
 
 // ServerCapabilities describes optional server features advertised by ping.
 type ServerCapabilities struct {
-	LiveHandoff          bool `json:"live_handoff"`
-	DetachedServerDaemon bool `json:"detached_server_daemon"`
+	LiveHandoff                bool `json:"live_handoff"`
+	DetachedServerDaemon       bool `json:"detached_server_daemon"`
+	AgentPromptExpectedSession bool `json:"agent_prompt_expected_session"`
 }
 
 // ServerInfo is returned by Ping.
@@ -122,18 +124,22 @@ func (c *Client) GetAgent(ctx context.Context, target string) (AgentInfo, error)
 }
 
 // Prompt submits text to a Herdr agent target and optionally waits for lifecycle
-// state. The wait is not turn correlation. Protocol 17 also does not provide an
-// expected-session precondition. Any non-dial failure is returned as an
-// AmbiguousPromptError and must not be retried automatically.
+// state. The wait is not turn correlation. ExpectedSession is safe only after an
+// affirmative AgentPromptExpectedSession capability check; older servers may
+// ignore the field. Except for a received agent_session_mismatch rejection, any
+// non-dial failure is returned as an AmbiguousPromptError and must not be retried
+// automatically.
 func (c *Client) Prompt(ctx context.Context, target, text string, options PromptOptions) (AgentInfo, error) {
 	params := struct {
-		Target string      `json:"target"`
-		Text   string      `json:"text"`
-		Wait   *PromptWait `json:"wait,omitempty"`
+		Target          string        `json:"target"`
+		Text            string        `json:"text"`
+		ExpectedSession *AgentSession `json:"expected_session,omitempty"`
+		Wait            *PromptWait   `json:"wait,omitempty"`
 	}{
-		Target: target,
-		Text:   text,
-		Wait:   options.Wait,
+		Target:          target,
+		Text:            text,
+		ExpectedSession: options.ExpectedSession,
+		Wait:            options.Wait,
 	}
 	var result struct {
 		Agent AgentInfo `json:"agent"`
@@ -141,6 +147,10 @@ func (c *Client) Prompt(ctx context.Context, target, text string, options Prompt
 	if err := c.call(ctx, "agent.prompt", params, "agent_prompted", &result); err != nil {
 		var transportErr *TransportError
 		if errors.As(err, &transportErr) && transportErr.Stage == TransportDial {
+			return AgentInfo{}, err
+		}
+		var apiErr *APIError
+		if options.ExpectedSession != nil && errors.As(err, &apiErr) && apiErr.Code == ErrorCodeAgentSessionMismatch {
 			return AgentInfo{}, err
 		}
 		return AgentInfo{}, &AmbiguousPromptError{Err: err}
@@ -159,6 +169,9 @@ type response struct {
 	Result json.RawMessage `json:"result"`
 	Error  *APIError       `json:"error"`
 }
+
+// ErrorCodeAgentSessionMismatch is a known rejection before prompt submission.
+const ErrorCodeAgentSessionMismatch = "agent_session_mismatch"
 
 // APIError is an error returned by the Herdr server.
 type APIError struct {

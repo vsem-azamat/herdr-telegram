@@ -35,7 +35,7 @@ GetAgent
 Prompt
 ```
 
-The SDK provides one-request-per-connection Unix-socket NDJSON transport, context cancellation, bounded responses, request-ID and result-discriminator validation, protocol-derived types, typed API/transport/protocol errors, and fail-closed `AmbiguousPromptError` handling. Event subscription, reconnect, and replay support are not implemented.
+The SDK provides one-request-per-connection Unix-socket NDJSON transport, context cancellation, bounded responses, request-ID and result-discriminator validation, protocol-derived types, typed API/transport/protocol errors, and fail-closed `AmbiguousPromptError` handling. It also models the optional expected-session prompt field and capability implemented by the temporary personal Herdr fork. Event subscription, reconnect, and replay support are not implemented.
 
 `NewClient` trusts the explicit socket endpoint. The future bridge adapter—not this low-level package—must perform the threat model's path, owner, mode, symlink, descriptor, and peer checks before construction.
 
@@ -53,15 +53,18 @@ Verified in a disposable live probe:
 
 No redacted Phase 0 fixture or transcript from that probe is tracked. Treat the observations as orientation only and reproduce evidence needed for an acceptance gate.
 
-Critical unresolved gate:
+Expected-session gate status:
 
-- protocol 17 and the reviewed protocol 18 development source expose `agent.prompt` with `target`, `text`, and optional `wait` only;
-- neither has an atomic `expected_session`, generation, revision, compare-and-send, or idempotency precondition;
-- therefore a local `Snapshot → verify occupant → Prompt(pane)` sequence remains TOCTOU-vulnerable;
-- [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md) specifies the minimal optional field, capability negotiation, mismatch error, linearizable server behavior, and occupant-replacement race tests;
-- automatic Telegram-to-agent prompt routing must remain disabled until the server-side primitive is implemented, advertised, and race-tested.
+- protocol 17 and the upstream protocol 18 source audited at `73d92004f50d3f5fafe64e0f9b7fddbcf4d99965` expose `agent.prompt` with `target`, `text`, and optional `wait` only;
+- a local `Snapshot → verify occupant → Prompt(pane)` sequence remains TOCTOU-vulnerable, including when the native ID is scraped directly from Codex, Claude, or Pi state;
+- with explicit approval, the personal `vsem-azamat/herdr` fork implements the proposed field, capability, mismatch error, and native-session wait pinning at commit `b610183d`; fork-only draft PR #1 records the change;
+- the fork passed its full test suite and a side-by-side disposable capability smoke test without replacing `/usr/bin/herdr`;
+- this repository's SDK can encode the field, but must require the affirmative capability because ordinary/older Herdr may ignore unknown request fields;
+- [`spikes/herdr-expected-session-live-probe.md`](spikes/herdr-expected-session-live-probe.md) records the redacted disposable Go-client probe: matching explicit-pane dispatch ignored focus, replacement failed with no rejected input, and a replacement session could not satisfy the accepted session's wait;
+- the expected-session compare-and-submit gate is proven for the temporary fork, but ordinary upstream Herdr has not adopted it and lifecycle status remains uncorrelated to a particular submitted turn;
+- automatic Telegram-to-agent prompt routing remains disabled pending the plugin/systemd and Telegram Phase 0 gate families and a decision on turn-completion correlation.
 
-Prompt waiting observes Herdr lifecycle state, not completion correlated to the submitted turn. Any non-dial prompt failure is conservatively ambiguous and must not be retried automatically.
+Prompt waiting observes Herdr lifecycle state, not completion correlated to the submitted turn. A correlated `agent_session_mismatch` response to an expected-session request is a known rejection; other non-dial prompt failures are conservatively ambiguous and must not be retried automatically.
 
 The other Phase 0 gate families are also not complete:
 
@@ -72,11 +75,11 @@ Do not start bridge product phases merely because the SDK exists. Phase 0 remain
 
 ## Next decision
 
-The Phase 0 expected-session contract specification is now recorded in [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md). Current upstream development source does not implement it, so Herdr server work remains an external blocker.
+The current focused task is SDK compatibility for the temporary expected-session fork contract. It must remain a low-level, capability-gated wire extension and must not start automatic routing or `internal/` bridge packages.
 
-With explicit owner approval, the expected-session gap was published as [Herdr Discussion #2016](https://github.com/ogulcancelik/herdr/discussions/2016). It is not yet an accepted contract or implementation. Do not create an upstream issue, fork, implementation branch, or pull request without separate explicit owner approval and maintainer alignment. Herdr server code and race tests belong upstream, not in this repository.
+The contract gap is published as [Herdr Discussion #2016](https://github.com/ogulcancelik/herdr/discussions/2016), but no upstream maintainer has accepted it. The personal fork is temporary development infrastructure. Do not open an issue or PR against `ogulcancelik/herdr` without separate explicit owner approval and maintainer alignment.
 
-The other possible next tasks are separate Phase 0 plugin/systemd lifecycle or disposable Telegram prerequisite spikes. Do not start those, SDK event subscriptions, or `internal/` bridge packages implicitly; each needs an explicit task choice and its own focused branch/PR.
+After this SDK checkpoint, the expected-session compare-and-submit evidence is complete for the temporary fork. The plugin/systemd lifecycle and Telegram prerequisite spikes are still incomplete, and `PromptWait` does not correlate completion to the submitted turn. Choose each as a separate focused task; do not start product routing merely because the fork probe passed.
 
 ## First-session checklist
 

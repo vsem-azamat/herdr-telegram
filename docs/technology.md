@@ -30,11 +30,11 @@ Each unary call owns one socket connection. The decoder tolerates unknown respon
 
 The SDK connects only to the explicit path supplied by its caller; it does not discover or authenticate a Herdr endpoint. The future bridge adapter remains responsible for the threat model's owner, mode, symlink, descriptor, and peer checks before using the client.
 
-For `agent.prompt`, every failure after a successful dial is conservatively wrapped in `AmbiguousPromptError`: the server may already have accepted the text. The wrapper preserves typed API, protocol, and transport errors through `errors.Is`/`errors.As`; the SDK never retries automatically. A dial-stage `TransportError` is the only failure classified as definitely not submitted.
+For `agent.prompt`, failures after a successful dial are conservatively wrapped in `AmbiguousPromptError`: the server may already have accepted the text. The exception is a correctly correlated `agent_session_mismatch` response to a request that carried `expected_session`; on a capability-advertising server this is a known rejection before input. The wrapper preserves typed API, protocol, and transport errors through `errors.Is`/`errors.As`; the SDK never retries automatically. A dial-stage `TransportError` is also definitely not submitted.
 
 `PromptWait` observes Herdr's agent lifecycle rather than correlating a completion to the submitted text. An empty `until` uses Herdr's `idle`, `done`, or `blocked` default. If a just-prompted non-working agent does not advance its lifecycle sequence, Herdr may return `agent_prompt_stalled`; this is preserved as an `APIError` inside `AmbiguousPromptError`, not proof that the text was not accepted.
 
-Protocol 17 `agent.prompt` accepts `target`, `text`, and optional `wait`; it does not accept an expected native session. The SDK exposes that fact rather than adding a false safety abstraction. Automatic Telegram routing remains blocked by the stronger bridge invariant.
+Protocol 17 `agent.prompt` accepts `target`, `text`, and optional `wait`; it does not accept an expected native session. The SDK also models the optional `expected_session` field and default-false `agent_prompt_expected_session` capability implemented by the temporary personal Herdr fork. This is a wire-level compatibility extension, not a client-side safety abstraction: callers must observe the affirmative capability before using the field because older servers may ignore it. Automatic Telegram routing remains blocked until server behavior and all Phase 0 gates are proven.
 
 ## SQLite
 
