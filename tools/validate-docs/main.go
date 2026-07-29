@@ -29,6 +29,7 @@ var required = []string{
 	".githooks/pre-commit",
 	".githooks/pre-push",
 	"docs/architecture.md",
+	"docs/current-state.md",
 	"docs/decisions.md",
 	"docs/development.md",
 	"docs/technology.md",
@@ -48,7 +49,7 @@ func main() {
 	problems = append(problems, validateRequired(root)...)
 	problems = append(problems, validateLinks(root)...)
 	problems = append(problems, validateSecrets(root)...)
-	problems = append(problems, validateDesignOnly(root)...)
+	problems = append(problems, validateBridgeProductBoundary(root)...)
 	if len(problems) > 0 {
 		fmt.Fprintln(os.Stderr, "documentation validation failed:")
 		for _, problem := range problems {
@@ -196,12 +197,12 @@ func unsafeTokenAssignment(line string) bool {
 	return value != "REDACTED" && value != "EXAMPLE" && value != "PLACEHOLDER"
 }
 
-func validateDesignOnly(root string) []string {
+func validateBridgeProductBoundary(root string) []string {
 	productRoots := []string{"cmd/herdr-telegram", "internal"}
 	for _, name := range productRoots {
 		path := filepath.Join(root, filepath.FromSlash(name))
 		if info, err := os.Stat(path); err == nil && info.IsDir() {
-			return []string{"design-only baseline unexpectedly contains product code: " + name}
+			return []string{"bridge product boundary unexpectedly contains product code: " + name}
 		}
 	}
 	return nil

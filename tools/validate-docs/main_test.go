@@ -108,12 +108,12 @@ func TestValidateRequired(t *testing.T) {
 	}
 }
 
-func TestValidateDesignOnly(t *testing.T) {
+func TestValidateBridgeProductBoundary(t *testing.T) {
 	t.Parallel()
 
 	t.Run("empty baseline", func(t *testing.T) {
 		root := t.TempDir()
-		if problems := validateDesignOnly(root); len(problems) != 0 {
+		if problems := validateBridgeProductBoundary(root); len(problems) != 0 {
 			t.Fatalf("empty baseline reported problems: %v", problems)
 		}
 	})
@@ -125,7 +125,7 @@ func TestValidateDesignOnly(t *testing.T) {
 			if err := os.MkdirAll(filepath.Join(root, filepath.FromSlash(productRoot)), 0o755); err != nil {
 				t.Fatal(err)
 			}
-			if problems := validateDesignOnly(root); len(problems) != 1 {
+			if problems := validateBridgeProductBoundary(root); len(problems) != 1 {
 				t.Fatalf("product baseline problems = %v, want one", problems)
 			}
 		})

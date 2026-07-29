@@ -2,7 +2,7 @@
 
 ## Runtime
 
-The daemon is implemented in Go. Herdr integration uses the executable/plugin boundary, CLI, and newline-delimited JSON socket protocol.
+The SDK is implemented in Go. The planned daemon will also use Go and integrate with Herdr through the executable/plugin boundary, CLI, and newline-delimited JSON socket protocol.
 
 Core standard-library packages:
 
@@ -14,7 +14,7 @@ Core standard-library packages:
 - `net` for Unix sockets;
 - `embed` for migrations and service assets.
 
-The daemon remains one process supervised by `systemd --user`.
+The planned daemon is one process supervised by `systemd --user`.
 
 ## Herdr SDK
 

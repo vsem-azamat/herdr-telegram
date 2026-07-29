@@ -132,7 +132,7 @@ See `technology.md`.
 
 **Decision:** Use MIT for the initial repository.
 
-**Reason:** The project is a small integration intended for broad reuse, carries no imported implementation, and benefits from a simple permissive license. This can still be changed before the repository is published.
+**Reason:** The project is a small integration intended for broad reuse, carries no imported implementation, and benefits from a simple permissive license. The repository is now public; changing the license requires an explicit new decision.
 
 ## D-017 — Stable names
 
