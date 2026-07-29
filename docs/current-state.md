@@ -60,7 +60,9 @@ Expected-session gate status:
 - with explicit approval, the personal `vsem-azamat/herdr` fork implements the proposed field, capability, mismatch error, and native-session wait pinning at commit `b610183d`; fork-only draft PR #1 records the change;
 - the fork passed its full test suite and a side-by-side disposable capability smoke test without replacing `/usr/bin/herdr`;
 - this repository's SDK can encode the field, but must require the affirmative capability because ordinary/older Herdr may ignore unknown request fields;
-- automatic Telegram-to-agent prompt routing remains disabled pending a redacted disposable client-level race probe and the other Phase 0 gate families.
+- [`spikes/herdr-expected-session-live-probe.md`](spikes/herdr-expected-session-live-probe.md) records the redacted disposable Go-client probe: matching explicit-pane dispatch ignored focus, replacement failed with no rejected input, and a replacement session could not satisfy the accepted session's wait;
+- the expected-session compare-and-submit gate is proven for the temporary fork, but ordinary upstream Herdr has not adopted it and lifecycle status remains uncorrelated to a particular submitted turn;
+- automatic Telegram-to-agent prompt routing remains disabled pending the plugin/systemd and Telegram Phase 0 gate families and a decision on turn-completion correlation.
 
 Prompt waiting observes Herdr lifecycle state, not completion correlated to the submitted turn. A correlated `agent_session_mismatch` response to an expected-session request is a known rejection; other non-dial prompt failures are conservatively ambiguous and must not be retried automatically.
 
@@ -77,7 +79,7 @@ The current focused task is SDK compatibility for the temporary expected-session
 
 The contract gap is published as [Herdr Discussion #2016](https://github.com/ogulcancelik/herdr/discussions/2016), but no upstream maintainer has accepted it. The personal fork is temporary development infrastructure. Do not open an issue or PR against `ogulcancelik/herdr` without separate explicit owner approval and maintainer alignment.
 
-After this SDK checkpoint, the expected-session Phase 0 work still needs a redacted disposable end-to-end race probe. The plugin/systemd lifecycle and Telegram prerequisite spikes are also incomplete. Choose each as a separate focused task; do not start product routing merely because the fork exists.
+After this SDK checkpoint, the expected-session compare-and-submit evidence is complete for the temporary fork. The plugin/systemd lifecycle and Telegram prerequisite spikes are still incomplete, and `PromptWait` does not correlate completion to the submitted turn. Choose each as a separate focused task; do not start product routing merely because the fork probe passed.
 
 ## First-session checklist
 

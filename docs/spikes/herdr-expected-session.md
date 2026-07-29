@@ -41,7 +41,7 @@ With explicit owner approval, the contract was implemented in the personal [`vse
 
 This fork is temporary development infrastructure. It does not establish upstream acceptance, and clients must never select the behavior by version or fork name. They must require the capability. Reading provider IDs directly from Codex, Claude, or Pi files/processes is not an alternative: those IDs identify session history but do not provide an atomic input endpoint, so pane occupant replacement remains racy.
 
-Remaining Phase 0 evidence includes a redacted disposable end-to-end occupant-replacement probe through this client, plus the separate plugin/systemd and Telegram prerequisite families. Production routing remains disabled.
+The redacted [`herdr-expected-session-live-probe.md`](herdr-expected-session-live-probe.md) now records a disposable end-to-end probe through the Go SDK: capability absence failed closed on ordinary v0.7.5, while the fork accepted a matching unfocused-pane prompt, rejected session A after replacement by B without rejected input, and prevented B from satisfying A's wait. The separate plugin/systemd and Telegram prerequisite families remain open, and lifecycle status is still not completion evidence correlated to a particular turn. Production routing remains disabled.
 
 ## Minimal backward-compatible extension
 
