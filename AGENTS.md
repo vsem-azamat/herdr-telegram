@@ -17,7 +17,7 @@ This repository is a clean-slate Herdr-native Telegram bridge. Read these before
 
 - Telegram topic identity binds to stable Herdr `agent_session`, never durable `pane_id`.
 - Focus is never a routing input or fallback.
-- Do not ship prompting unless Herdr provides or proves an atomic expected-session precondition. A local read-then-prompt check has a replacement race.
+- Do not ship automatic Telegram→agent prompt routing unless Herdr provides or proves an atomic expected-session precondition. A low-level SDK may expose Herdr's exact `agent.prompt` method only when it documents that protocol 17 has no such guard.
 - Snapshot is authoritative; events are replayable hints.
 - Missing/ambiguous/conflicting routes fail closed.
 - Never automatically retry an ambiguous `agent.prompt`, `createForumTopic`, or Telegram send.

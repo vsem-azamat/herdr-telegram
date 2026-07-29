@@ -16,6 +16,22 @@ Core standard-library packages:
 
 The daemon remains one process supervised by `systemd --user`.
 
+## Herdr SDK
+
+The public `herdr` Go package is a small standard-library client for Herdr's newline-delimited JSON Unix-socket API. Its first checkpoint includes bounded unary requests for:
+
+- `ping`;
+- `session.snapshot`;
+- `agent.list`;
+- `agent.get`;
+- `agent.prompt` with the protocol's optional wait object.
+
+Each unary call owns one socket connection. The decoder tolerates unknown response fields for forward compatibility, checks request correlation and result discriminators, surfaces typed server and transport-stage errors, bounds responses, and honors context cancellation. Event subscriptions require a separate long-lived connection and are later work.
+
+For `agent.prompt`, a write- or read-stage transport failure can be ambiguous: the server may already have accepted the text. The SDK preserves the transport stage but does not retry automatically.
+
+Protocol 17 `agent.prompt` accepts `target`, `text`, and optional `wait`; it does not accept an expected native session. The SDK exposes that fact rather than adding a false safety abstraction. Automatic Telegram routing remains blocked by the stronger bridge invariant.
+
 ## SQLite
 
 The planned driver is `modernc.org/sqlite`, introduced in the persistence phase rather than the documentation baseline.

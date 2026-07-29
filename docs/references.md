@@ -9,6 +9,7 @@ References are evidence, not hidden requirements. The repository's architecture 
 - [CLI reference](https://herdr.dev/docs/cli-reference/) — portable wrappers and plugin commands.
 - [Plugin marketplace](https://herdr.dev/plugins/) — community discovery model.
 - [Herdr v0.7.5 release](https://github.com/ogulcancelik/herdr/releases/tag/v0.7.5) — current verified baseline.
+- [Herdr v0.7.5 tagged API schema source](https://github.com/ogulcancelik/herdr/tree/v0.7.5/src/api/schema) — exact request, response, snapshot, and agent field contracts used by the Go SDK fixtures.
 - [Issue #1270: retained event replay](https://github.com/ogulcancelik/herdr/issues/1270) — why snapshots are authoritative and event bootstrap needs buffering/reconciliation.
 - [Herdr contributing guide](https://github.com/ogulcancelik/herdr/blob/master/CONTRIBUTING.md) — project direction and proposal process.
 

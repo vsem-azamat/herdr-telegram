@@ -16,7 +16,9 @@ This is the sole normative execution plan.
 
 ## Phase 0 — Contract spikes and lifecycle proof
 
-**Goal:** Resolve all three implementation-blocker families without product code.
+**Goal:** Resolve all three implementation-blocker families before Telegram bridge product code.
+
+A focused transport-only SDK checkpoint may precede these spikes. It may model and test Herdr's existing protocol, including low-level `agent.prompt`, but must not implement stable-session routing or claim an expected-session guarantee the server does not expose.
 
 ### Herdr explicit target spike
 
@@ -61,7 +63,7 @@ Against a disposable bot and pre-provisioned forum:
 - redacted Herdr request/response and race-test fixtures proving atomic expected-session dispatch, or an explicit upstream blocker with prompting disabled;
 - systemd/plugin lifecycle transcript covering disable/unlink and stale descriptors;
 - disposable Telegram prerequisite/recovery transcript with no production credentials;
-- updated normative documents. Product-code phases cannot start while any family remains unresolved.
+- updated normative documents. Telegram bridge product-code phases cannot start while any family remains unresolved.
 
 ## Phase 1 — Domain model
 
@@ -77,7 +79,7 @@ internal/domain/errors.go
 internal/domain/*_test.go
 ```
 
-At the first product-code commit, replace the temporary design-only guard in `tools/validate-docs` with checks for the expected package/test structure. The guard exists only to prove the documentation baseline contains no hidden implementation.
+At the first bridge product-code commit, replace the temporary `cmd/herdr-telegram` / `internal` guard in `tools/validate-docs` with checks for the expected package/test structure. A standalone `herdr` SDK package does not trigger that transition.
 
 Test:
 

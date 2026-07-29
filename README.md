@@ -2,7 +2,7 @@
 
 A clean-slate, Telegram-oriented remote interface for [Herdr](https://herdr.dev/).
 
-> **Status:** architecture and planning only. There is no runnable bridge yet.
+> **Status:** the typed Herdr Go SDK is under implementation. There is no runnable Telegram bridge yet.
 
 ## Product model
 
@@ -81,6 +81,7 @@ Not included:
 
 | Document | Purpose |
 |---|---|
+| [`herdr`](herdr) | Typed Go client for Herdr's protocol 17 Unix-socket API |
 | [Architecture](docs/architecture.md) | Runtime model, identities, state, failure semantics |
 | [Decisions](docs/decisions.md) | Why the design takes this shape |
 | [Technology](docs/technology.md) | Go runtime, dependencies, tooling, and packaging |
@@ -112,13 +113,15 @@ A detected Pi agent currently has no `agent_session`, confirming that process de
 
 ## Implementation posture
 
-No product code should be added until all three Phase 0 contract families pass:
+A transport-only Herdr SDK may be implemented before the bridge contract gates. It mirrors the upstream protocol without claiming stronger routing guarantees. In particular, its low-level `Prompt` method does not make session-safe dispatch atomic.
+
+Telegram bridge product phases remain blocked until all three Phase 0 contract families pass:
 
 - atomic expected-session behavior for explicit `agent.prompt.target`, including occupant replacement races;
 - exact `systemd --user` and Herdr plugin disable/unlink lifecycle;
 - Telegram forum prerequisites and operator recovery;
 
-Implementation should proceed TDD-first, one phase at a time, with separate specification and quality reviews. Agents must not publish, merge, or enable the bridge against production Telegram without explicit human approval.
+Implementation proceeds TDD-first, one focused PR at a time, with separate specification and quality reviews. Agents must not publish, merge, or enable the bridge against production Telegram without explicit human approval.
 
 ## License
 

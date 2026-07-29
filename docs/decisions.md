@@ -139,3 +139,11 @@ See `technology.md`.
 **Decision:** Use repository/package names `herdr-telegram` / `herdr_telegram`, executable `herdr-telegram`, and Herdr plugin ID `io.github.vsem-azamat.herdr-telegram`.
 
 **Reason:** These names are explicit, searchable, and avoid a globally ambiguous short plugin ID. The reverse-GitHub namespace matches the current owner.
+
+## D-018 — Build the protocol SDK before bridge routing
+
+**Decision:** Deliver a small public Go SDK for Herdr protocol 17 as an intermediate checkpoint before Telegram bridge product phases.
+
+**Reason:** Socket transport, envelopes, snapshots, agent records, and typed errors are independently useful and testable. They do not depend on proving the bridge's stable-session routing policy.
+
+**Boundary:** The SDK mirrors low-level `agent.prompt(target, text, wait?)` exactly and documents that protocol 17 has no atomic expected-session precondition. It must not expose a method whose name or contract implies session-safe dispatch. Telegram routing remains blocked until the stronger server-side guarantee exists.

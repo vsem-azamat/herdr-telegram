@@ -1,4 +1,4 @@
-// Command validate-docs checks the design-only repository baseline.
+// Command validate-docs checks repository documentation and policy invariants.
 package main
 
 import (
@@ -28,6 +28,9 @@ var required = []string{
 	"Makefile",
 	".githooks/pre-commit",
 	".githooks/pre-push",
+	"herdr/client.go",
+	"herdr/client_test.go",
+	"herdr/types.go",
 	"docs/architecture.md",
 	"docs/decisions.md",
 	"docs/development.md",
