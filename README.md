@@ -36,6 +36,20 @@ The daemon is implemented in Go and integrates with Herdr through its process/so
 
 See [Technology](docs/technology.md) for the concrete stack and operating constraints.
 
+## Herdr Go SDK
+
+The initial public package wraps protocol 17 unary calls with bounded responses:
+
+```go
+client, err := herdr.NewClient(socketPath)
+if err != nil {
+    return err
+}
+snapshot, err := client.Snapshot(ctx)
+```
+
+Import it as `github.com/vsem-azamat/herdr-telegram/herdr`. [Compile-checked examples](herdr/example_test.go) show deadlines and typed error inspection. Event subscriptions are deferred. `NewClient` trusts the explicit socket endpoint; the bridge layer must perform the threat model's path and peer validation before construction. `Client.Prompt` mirrors Herdr's low-level pane/name target and does not provide atomic expected-session routing. Any non-dial prompt failure is an `AmbiguousPromptError` and must not be retried automatically.
+
 ## Core invariants
 
 1. A Telegram topic maps to at most one stable Herdr agent session.
@@ -125,4 +139,4 @@ Implementation proceeds TDD-first, one focused PR at a time, with separate speci
 
 ## License
 
-MIT. Because the repository is still local and unpublished, the owner can change this before public publication if a different policy is preferred.
+MIT. The repository is public and the implementation remains clean-slate.

@@ -96,29 +96,38 @@ Test:
 - one in-flight turn per topic;
 - no focus-derived route type exists.
 
-## Phase 2 — Herdr protocol adapter
+## Phase 2 — Herdr bridge adapter
 
-**Goal:** Parse and control Herdr through a narrow port.
+**Goal:** Reuse the public `herdr` SDK behind a narrow bridge port and add only protocol surfaces still required by the daemon.
 
-Create:
+Extend the public SDK instead of creating a second client:
 
 ```text
-internal/herdr/client.go
-internal/herdr/snapshot.go
-internal/herdr/events.go
+herdr/subscription.go
+herdr/controls.go
+herdr/*_test.go
+```
+
+Create bridge-specific policy and validation:
+
+```text
+internal/herdr/adapter.go
+internal/herdr/validation.go
 internal/herdr/*_test.go
 internal/herdr/testdata/
 ```
 
+The internal adapter must compose `herdr.Client`; it must not duplicate socket framing, unary envelopes, snapshot structs, prompt encoding, or typed errors.
+
 Test:
 
-- protocol/version handshake;
-- snapshot parsing for Claude, Codex, and no-session agent;
-- explicit pane prompt;
-- bounded read and allowlisted keys;
-- disconnect, malformed response, stale target;
-- event subscription acknowledgment and retained replay;
-- unknown fields tolerated, missing required semantics rejected.
+- live protocol/version compatibility through the public SDK;
+- bridge-required semantic validation for Claude, Codex, and no-session snapshots;
+- server-side expected-session prompt behavior once the Phase 0 protocol gate is resolved, including stale-target rejection; no adapter-side read-then-prompt substitute;
+- bounded reads and allowlisted controls added to the public SDK;
+- disconnect and malformed-response propagation through the adapter;
+- event subscription acknowledgment and retained replay on the deferred long-lived SDK connection;
+- unknown transport fields tolerated while missing bridge-required semantics fail closed.
 
 ## Phase 3 — Reconciler
 

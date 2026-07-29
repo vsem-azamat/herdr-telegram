@@ -443,6 +443,128 @@ func TestClientRejectsMismatchedResponseID(t *testing.T) {
 	}
 }
 
+func TestClientRejectsResponseWithResultAndError(t *testing.T) {
+	t.Parallel()
+
+	socketPath := filepath.Join(t.TempDir(), "herdr.sock")
+	serveOne(t, socketPath, func(t *testing.T, request map[string]json.RawMessage) any {
+		return map[string]any{
+			"id":     requestID(t, request),
+			"result": map[string]any{"type": "pong", "version": "0.7.5", "protocol": 17},
+			"error":  map[string]any{"code": "unexpected", "message": "both variants"},
+		}
+	})
+
+	client, err := herdr.NewClient(socketPath)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	_, err = client.Ping(context.Background())
+	var responseErr *herdr.InvalidResponseError
+	if !errors.As(err, &responseErr) {
+		t.Fatalf("Ping() error = %v, want *InvalidResponseError", err)
+	}
+}
+
+func TestClientPromptMarksPostDialFailuresAmbiguous(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		options []herdr.Option
+		respond func(*testing.T, map[string]json.RawMessage) any
+		check   func(error) bool
+	}{
+		{
+			name: "API error",
+			respond: func(t *testing.T, request map[string]json.RawMessage) any {
+				return map[string]any{"id": requestID(t, request), "error": map[string]any{"code": "agent_prompt_stalled", "message": "no lifecycle change"}}
+			},
+			check: func(err error) bool { var target *herdr.APIError; return errors.As(err, &target) },
+		},
+		{
+			name: "mismatched response ID",
+			respond: func(*testing.T, map[string]json.RawMessage) any {
+				return map[string]any{"id": "other", "result": map[string]any{"type": "agent_prompted"}}
+			},
+			check: func(err error) bool { var target *herdr.ResponseIDError; return errors.As(err, &target) },
+		},
+		{
+			name: "unexpected result",
+			respond: func(t *testing.T, request map[string]json.RawMessage) any {
+				return map[string]any{"id": requestID(t, request), "result": map[string]any{"type": "pong"}}
+			},
+			check: func(err error) bool { var target *herdr.UnexpectedResultError; return errors.As(err, &target) },
+		},
+		{
+			name:    "oversized response",
+			options: []herdr.Option{herdr.WithMaxMessageBytes(64)},
+			respond: func(t *testing.T, request map[string]json.RawMessage) any {
+				return map[string]any{"id": requestID(t, request), "result": map[string]any{"type": "agent_prompted", "padding": "response-too-large-for-configured-limit"}}
+			},
+			check: func(err error) bool { return errors.Is(err, herdr.ErrMessageTooLarge) },
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			socketPath := filepath.Join(t.TempDir(), "herdr.sock")
+			serveOne(t, socketPath, test.respond)
+			client, err := herdr.NewClient(socketPath, test.options...)
+			if err != nil {
+				t.Fatalf("NewClient() error = %v", err)
+			}
+			_, err = client.Prompt(context.Background(), "w1:p1", "continue", herdr.PromptOptions{})
+			var ambiguous *herdr.AmbiguousPromptError
+			if !errors.As(err, &ambiguous) {
+				t.Fatalf("Prompt() error = %v, want *AmbiguousPromptError", err)
+			}
+			if !test.check(err) {
+				t.Fatalf("Prompt() error = %v, underlying error type not preserved", err)
+			}
+		})
+	}
+}
+
+func TestClientPromptDialFailureIsNotMarkedAmbiguous(t *testing.T) {
+	t.Parallel()
+
+	client, err := herdr.NewClient(filepath.Join(t.TempDir(), "missing.sock"))
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	_, err = client.Prompt(context.Background(), "w1:p1", "continue", herdr.PromptOptions{})
+	var ambiguous *herdr.AmbiguousPromptError
+	if errors.As(err, &ambiguous) {
+		t.Fatalf("Prompt() dial error = %v, must not be ambiguous", err)
+	}
+	var transportErr *herdr.TransportError
+	if !errors.As(err, &transportErr) || transportErr.Stage != herdr.TransportDial {
+		t.Fatalf("Prompt() error = %v, want dial-stage TransportError", err)
+	}
+}
+
+func TestClientPromptMalformedResponseIsAmbiguous(t *testing.T) {
+	t.Parallel()
+
+	socketPath := filepath.Join(t.TempDir(), "herdr.sock")
+	serveRawOne(t, socketPath, []byte("not-json\n"))
+	client, err := herdr.NewClient(socketPath)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	_, err = client.Prompt(context.Background(), "w1:p1", "continue", herdr.PromptOptions{})
+	var ambiguous *herdr.AmbiguousPromptError
+	if !errors.As(err, &ambiguous) {
+		t.Fatalf("Prompt() error = %v, want *AmbiguousPromptError", err)
+	}
+	var syntaxErr *json.SyntaxError
+	if !errors.As(err, &syntaxErr) {
+		t.Fatalf("Prompt() error = %v, want wrapped *json.SyntaxError", err)
+	}
+}
+
 func TestClientCancellationInterruptsResponseRead(t *testing.T) {
 	t.Parallel()
 
@@ -543,6 +665,38 @@ func serveOne(t *testing.T, socketPath string, respond func(*testing.T, map[stri
 
 		if err := json.NewEncoder(connection).Encode(respond(t, request)); err != nil {
 			t.Errorf("encode response: %v", err)
+		}
+	}()
+
+	t.Cleanup(func() {
+		_ = listener.Close()
+		<-done
+	})
+}
+
+func serveRawOne(t *testing.T, socketPath string, response []byte) {
+	t.Helper()
+
+	listener, err := net.Listen("unix", socketPath)
+	if err != nil {
+		t.Fatalf("listen on Unix socket: %v", err)
+	}
+	t.Cleanup(func() { _ = listener.Close() })
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		connection, acceptErr := listener.Accept()
+		if acceptErr != nil {
+			return
+		}
+		defer connection.Close()
+		if _, readErr := bufio.NewReader(connection).ReadBytes('\n'); readErr != nil {
+			t.Errorf("read request: %v", readErr)
+			return
+		}
+		if _, writeErr := connection.Write(response); writeErr != nil {
+			t.Errorf("write response: %v", writeErr)
 		}
 	}()
 

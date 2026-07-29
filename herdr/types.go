@@ -13,12 +13,12 @@ const (
 
 // PromptOptions controls optional server-side waiting after prompt submission.
 type PromptOptions struct {
-	Wait *PromptWait
+	Wait *PromptWait `json:"wait,omitempty"`
 }
 
 // PromptWait asks Herdr to observe agent lifecycle state after prompt submission.
-// An empty Until uses Herdr's idle, done, or blocked default. This is not a
-// correlation guarantee for the submitted turn.
+// An empty Until on a non-nil PromptWait uses Herdr's idle, done, or blocked
+// default. This is not a correlation guarantee for the submitted turn.
 type PromptWait struct {
 	Until     []AgentStatus `json:"until,omitempty"`
 	TimeoutMS *uint64       `json:"timeout_ms,omitempty"`

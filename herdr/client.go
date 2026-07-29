@@ -3,6 +3,7 @@ package herdr
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -15,6 +16,9 @@ import (
 )
 
 const defaultMaxMessageBytes int64 = 8 << 20
+
+// ProtocolVersion is the Herdr protocol revision modeled by this package.
+const ProtocolVersion uint32 = 17
 
 // ErrMessageTooLarge reports an NDJSON response above the configured limit.
 var ErrMessageTooLarge = errors.New("herdr: response exceeds maximum message size")
@@ -119,7 +123,8 @@ func (c *Client) GetAgent(ctx context.Context, target string) (AgentInfo, error)
 
 // Prompt submits text to a Herdr agent target and optionally waits for lifecycle
 // state. The wait is not turn correlation. Protocol 17 also does not provide an
-// expected-session precondition.
+// expected-session precondition. Any non-dial failure is returned as an
+// AmbiguousPromptError and must not be retried automatically.
 func (c *Client) Prompt(ctx context.Context, target, text string, options PromptOptions) (AgentInfo, error) {
 	params := struct {
 		Target string      `json:"target"`
@@ -134,7 +139,11 @@ func (c *Client) Prompt(ctx context.Context, target, text string, options Prompt
 		Agent AgentInfo `json:"agent"`
 	}
 	if err := c.call(ctx, "agent.prompt", params, "agent_prompted", &result); err != nil {
-		return AgentInfo{}, err
+		var transportErr *TransportError
+		if errors.As(err, &transportErr) && transportErr.Stage == TransportDial {
+			return AgentInfo{}, err
+		}
+		return AgentInfo{}, &AmbiguousPromptError{Err: err}
 	}
 	return result.Agent, nil
 }
@@ -160,6 +169,33 @@ type APIError struct {
 // Error implements error.
 func (e *APIError) Error() string {
 	return fmt.Sprintf("herdr: API error %s: %s", e.Code, e.Message)
+}
+
+// InvalidResponseError reports an invalid response envelope.
+type InvalidResponseError struct {
+	Reason string
+}
+
+// Error implements error.
+func (e *InvalidResponseError) Error() string {
+	return "herdr: invalid response: " + e.Reason
+}
+
+// AmbiguousPromptError reports that a prompt might have been accepted even
+// though the client could not establish its outcome. Callers must not retry it
+// automatically. The wrapped error remains available through errors.Is/As.
+type AmbiguousPromptError struct {
+	Err error
+}
+
+// Error implements error.
+func (e *AmbiguousPromptError) Error() string {
+	return "herdr: prompt outcome is ambiguous: " + e.Err.Error()
+}
+
+// Unwrap returns the underlying API, protocol, or transport error.
+func (e *AmbiguousPromptError) Unwrap() error {
+	return e.Err
 }
 
 // UnexpectedResultError reports a success response for a different method shape.
@@ -248,11 +284,16 @@ func (c *Client) call(ctx context.Context, method string, params any, wantType s
 	if envelope.ID != id {
 		return &ResponseIDError{RequestID: id, ResponseID: envelope.ID}
 	}
+	trimmedResult := bytes.TrimSpace(envelope.Result)
+	hasResult := len(trimmedResult) != 0 && !bytes.Equal(trimmedResult, []byte("null"))
+	if envelope.Error != nil && hasResult {
+		return &InvalidResponseError{Reason: "contains both result and error"}
+	}
 	if envelope.Error != nil {
 		return envelope.Error
 	}
-	if len(envelope.Result) == 0 {
-		return errors.New("herdr: response has neither result nor error")
+	if !hasResult {
+		return &InvalidResponseError{Reason: "contains neither result nor error"}
 	}
 	var header struct {
 		Type string `json:"type"`
