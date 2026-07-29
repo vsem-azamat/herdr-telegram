@@ -1,6 +1,6 @@
 # Contributing
 
-The project is currently design-first and has no production implementation.
+The project currently ships an initial public Herdr Go SDK. The Telegram bridge remains specification-only and has no runnable product implementation.
 
 ## Before contributing
 
@@ -32,7 +32,7 @@ Run the same gate as CI:
 make check
 ```
 
-Until product code exists, the gate checks required files and local links, Go module consistency, formatting and vetting, normal and race-enabled tests, hook syntax and modes, design-only boundaries, and likely Telegram tokens.
+The gate checks required files and local links, Go module consistency, formatting and vetting, normal and race-enabled tests, hook syntax and modes, the temporary no-bridge-product-code boundary, and likely Telegram tokens.
 
 See `docs/development.md` for individual commands and validation conventions.
 

@@ -5,13 +5,14 @@
 This repository is a clean-slate Herdr-native Telegram bridge. Read these before changing anything:
 
 1. `README.md`
-2. `docs/architecture.md`
-3. `docs/decisions.md`
-4. `docs/technology.md`
-5. `docs/development.md`
-6. `docs/threat-model.md`
-7. `docs/operations.md`
-8. `docs/implementation-plan.md`
+2. `docs/current-state.md`
+3. `docs/architecture.md`
+4. `docs/decisions.md`
+5. `docs/technology.md`
+6. `docs/development.md`
+7. `docs/threat-model.md`
+8. `docs/operations.md`
+9. `docs/implementation-plan.md`
 
 ## Non-negotiable invariants
 
@@ -79,7 +80,7 @@ Do not add bot frameworks, ORMs, CGO by default, brokers, generic provider inter
 
 ## Documentation
 
-When behavior changes, update the relevant architecture/decision/operations/threat document in the same change. Do not let implementation silently become the specification.
+When behavior changes, update the relevant architecture/decision/operations/threat document in the same change. Update `docs/current-state.md` whenever a checkpoint changes what is shipped, blocked, or next. Do not let implementation silently become the specification.
 
 ## Stop conditions
 

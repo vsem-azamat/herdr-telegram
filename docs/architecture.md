@@ -1,5 +1,7 @@
 # Architecture
 
+> This is the target bridge architecture. See `current-state.md` for what is implemented and currently blocked.
+
 ## 1. Context
 
 Herdr can host several independent coding-agent sessions in adjacent panes. A Telegram bridge that binds a topic to a tab and forwards input to the tab's focused pane cannot preserve the intended recipient when focus changes.
@@ -110,15 +112,15 @@ Implements only required Bot API methods and exposes explicit result classes:
 
 ### Herdr adapter
 
-The only component that knows Herdr JSON shapes. It:
+The public `herdr` package owns protocol framing, unary envelopes, protocol-derived JSON types, bounded transport, and typed errors. The internal bridge adapter composes `herdr.Client` and owns bridge policy. It:
 
-- opens raw event subscriptions;
-- requests snapshots;
-- parses native session identity;
+- subscribes to events through the public SDK;
+- requests snapshots through the public SDK;
+- validates supported native session identity semantics;
 - resolves exact pane targets;
 - prompts and sends allowlisted keys;
 - reads bounded output;
-- understands protocol/version failures.
+- enforces endpoint trust checks and understands protocol/version failures.
 
 ### Serialized reconciler
 

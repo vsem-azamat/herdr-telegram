@@ -2,7 +2,7 @@
 
 A clean-slate, Telegram-oriented remote interface for [Herdr](https://herdr.dev/).
 
-> **Status:** the typed Herdr Go SDK is under implementation. There is no runnable Telegram bridge yet.
+> **Status:** the initial typed Herdr Go SDK is implemented. There is no runnable Telegram bridge yet; Phase 0 contract gates still block product routing.
 
 ## Product model
 
@@ -32,7 +32,7 @@ It is intentionally not a fork or rewrite of an existing bridge. The repository 
 
 ## Technology
 
-The daemon is implemented in Go and integrates with Herdr through its process/socket protocol. The planned stack uses standard HTTP, JSON, context, and structured logging packages; `database/sql` with a pure-Go SQLite driver; embedded migrations/assets; and `systemd --user` supervision.
+The implemented SDK and planned daemon use Go. The daemon will integrate with Herdr through its process/socket protocol. Its planned stack uses standard HTTP, JSON, context, and structured logging packages; `database/sql` with a pure-Go SQLite driver; embedded migrations/assets; and `systemd --user` supervision.
 
 See [Technology](docs/technology.md) for the concrete stack and operating constraints.
 
@@ -96,6 +96,7 @@ Not included:
 | Document | Purpose |
 |---|---|
 | [`herdr`](herdr) | Typed Go client for Herdr's protocol 17 Unix-socket API |
+| [Current state](docs/current-state.md) | Shipped checkpoint, unresolved gates, and next-agent decision point |
 | [Architecture](docs/architecture.md) | Runtime model, identities, state, failure semantics |
 | [Decisions](docs/decisions.md) | Why the design takes this shape |
 | [Technology](docs/technology.md) | Go runtime, dependencies, tooling, and packaging |
@@ -127,7 +128,7 @@ A detected Pi agent currently has no `agent_session`, confirming that process de
 
 ## Implementation posture
 
-A transport-only Herdr SDK may be implemented before the bridge contract gates. It mirrors the upstream protocol without claiming stronger routing guarantees. In particular, its low-level `Prompt` method does not make session-safe dispatch atomic.
+The transport-only Herdr SDK was delivered before the bridge contract gates. It mirrors the upstream protocol without claiming stronger routing guarantees. In particular, its low-level `Prompt` method does not make session-safe dispatch atomic.
 
 Telegram bridge product phases remain blocked until all three Phase 0 contract families pass:
 

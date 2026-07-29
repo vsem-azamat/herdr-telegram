@@ -22,7 +22,11 @@ A focused transport-only SDK checkpoint may precede these spikes. It may model a
 
 ### Herdr explicit target spike
 
-Prove on a disposable Herdr workspace that protocol 17 accepts an explicit `pane_id` as `agent.prompt.target` and can protect the expected stable session atomically:
+**Current checkpoint:** A disposable live probe verified that protocol 17 can prompt an explicit pane independently of focus. Tagged v0.7.5 schema/source confirms that `agent.prompt` has no atomic expected-session precondition, so steps 5–8 below remain blocked on an upstream API change. Do not repeat the same client-side read-then-prompt experiment as if it could close that gap; the next useful work is a backward-compatible server primitive plus occupant-replacement tests, or validation against a newer server that already provides one.
+
+The next repository deliverable is `docs/spikes/herdr-expected-session.md`: re-check the latest upstream protocol in a separate read-only checkout, then record either the available atomic contract or the smallest backward-compatible proposal and required server-side race tests. Herdr server code and tests belong upstream and require explicit user authorization before opening an issue, fork, or PR.
+
+Prove on a disposable Herdr workspace that the server can protect the expected stable session atomically:
 
 1. create or choose two disposable agent panes;
 2. change focus away from the target;
