@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+git diff --cached --check
+
+snapshot=$(mktemp -d)
+trap 'rm -rf "$snapshot"' EXIT HUP INT TERM
+
+git checkout-index --all --prefix="$snapshot/"
+git -C "$snapshot" init -q
+git -C "$snapshot" add -A
+make -C "$snapshot" lint test docs

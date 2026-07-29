@@ -18,18 +18,23 @@ Prefer one implementation-plan phase or a smaller coherent slice. Avoid mixed re
 
 Behavioral changes follow TDD and include the relevant failure boundaries. No production Telegram credentials or active user Herdr sessions are allowed in tests.
 
-Planned checks:
+## Local setup and checks
+
+Install the tracked hooks once per clone:
 
 ```bash
-test -z "$(gofmt -l .)"
-go mod tidy -diff
-go vet ./...
-go test ./...
-go test -race ./...
-go run ./tools/validate-docs
+make hooks
 ```
 
-Until product code exists, validate required documentation, local links, Go module consistency, formatting, repository cleanliness, and absence of likely Telegram tokens.
+Run the same gate as CI:
+
+```bash
+make check
+```
+
+Until product code exists, the gate checks required files and local links, Go module consistency, formatting and vetting, normal and race-enabled tests, hook syntax and modes, design-only boundaries, and likely Telegram tokens.
+
+See `docs/development.md` for individual commands and validation conventions.
 
 ## Reviews
 

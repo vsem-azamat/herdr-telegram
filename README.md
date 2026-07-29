@@ -84,6 +84,7 @@ Not included:
 | [Architecture](docs/architecture.md) | Runtime model, identities, state, failure semantics |
 | [Decisions](docs/decisions.md) | Why the design takes this shape |
 | [Technology](docs/technology.md) | Go runtime, dependencies, tooling, and packaging |
+| [Development](docs/development.md) | Local commands, hooks, tests, and validation style |
 | [Threat model](docs/threat-model.md) | Trust boundaries and required controls |
 | [Operations](docs/operations.md) | Plugin/service lifecycle and recovery |
 | [Implementation plan](docs/implementation-plan.md) | Ordered delivery phases and acceptance gates |

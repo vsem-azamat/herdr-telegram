@@ -48,16 +48,13 @@ No Telegram bot framework is part of the MVP.
 
 ## Testing and tooling
 
-Required baseline commands:
+The canonical local and CI gate is:
 
 ```text
-test -z "$(gofmt -l .)"
-go mod tidy -diff
-go vet ./...
-go test ./...
-go test -race ./...
-go run ./tools/validate-docs
+make check
 ```
+
+`docs/development.md` defines its individual targets, hook behavior, and validation conventions.
 
 Use:
 

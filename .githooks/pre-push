@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+
+root=$(git rev-parse --show-toplevel)
+zero=0000000000000000000000000000000000000000
+checked=""
+saw_input=0
+
+check_ref() {
+	sha=$1
+	case " $checked " in
+		*" $sha "*) return ;;
+	esac
+	checked="$checked $sha"
+
+	snapshot=$(mktemp -d)
+	trap 'rm -rf "$snapshot"' EXIT HUP INT TERM
+	git -C "$root" archive "$sha" | tar -x -C "$snapshot"
+	git -C "$snapshot" init -q
+	git -C "$snapshot" add -A
+	make -C "$snapshot" check
+	rm -rf "$snapshot"
+	trap - EXIT HUP INT TERM
+}
+
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+	saw_input=1
+	[ "$local_sha" = "$zero" ] && continue
+	check_ref "$local_sha"
+done
+
+if [ "$saw_input" -eq 0 ]; then
+	check_ref HEAD
+fi

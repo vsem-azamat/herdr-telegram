@@ -8,9 +8,10 @@ This repository is a clean-slate Herdr-native Telegram bridge. Read these before
 2. `docs/architecture.md`
 3. `docs/decisions.md`
 4. `docs/technology.md`
-5. `docs/threat-model.md`
-6. `docs/operations.md`
-7. `docs/implementation-plan.md`
+5. `docs/development.md`
+6. `docs/threat-model.md`
+7. `docs/operations.md`
+8. `docs/implementation-plan.md`
 
 ## Non-negotiable invariants
 
@@ -37,6 +38,7 @@ If you consult comparative repositories, record the conceptual lesson in `docs/r
 - Use TDD: failing test → verify failure → minimal implementation → verify pass → refactor.
 - Keep changes focused; do not pull later-phase scope forward.
 - Run the narrow test first, then the phase suite, then full checks.
+- Run `make check` before pushing; CI executes the same target.
 - Request specification-compliance review before quality/security review.
 - Never merge, publish, push a release, configure production credentials, or enable production routing without explicit human approval.
 
