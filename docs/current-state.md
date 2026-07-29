@@ -74,7 +74,7 @@ Do not start bridge product phases merely because the SDK exists. Phase 0 remain
 
 The Phase 0 expected-session contract specification is now recorded in [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md). Current upstream development source does not implement it, so Herdr server work remains an external blocker.
 
-The owner must explicitly choose whether to authorize publication of an upstream proposal. Without that authorization, do not create an issue, fork, implementation branch, pull request, or public proposal, and do not record an upstream proposal URL. Herdr server code and race tests belong upstream, not in this repository.
+With explicit owner approval, the expected-session gap was published as [Herdr Discussion #2016](https://github.com/ogulcancelik/herdr/discussions/2016). It is not yet an accepted contract or implementation. Do not create an upstream issue, fork, implementation branch, or pull request without separate explicit owner approval and maintainer alignment. Herdr server code and race tests belong upstream, not in this repository.
 
 The other possible next tasks are separate Phase 0 plugin/systemd lifecycle or disposable Telegram prerequisite spikes. Do not start those, SDK event subscriptions, or `internal/` bridge packages implicitly; each needs an explicit task choice and its own focused branch/PR.
 
