@@ -16,7 +16,9 @@ type PromptOptions struct {
 	Wait *PromptWait
 }
 
-// PromptWait asks Herdr to wait for one of Until after submitting a prompt.
+// PromptWait asks Herdr to observe agent lifecycle state after prompt submission.
+// An empty Until uses Herdr's idle, done, or blocked default. This is not a
+// correlation guarantee for the submitted turn.
 type PromptWait struct {
 	Until     []AgentStatus `json:"until,omitempty"`
 	TimeoutMS *uint64       `json:"timeout_ms,omitempty"`

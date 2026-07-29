@@ -335,6 +335,35 @@ func TestClientPromptOmitsWaitByDefault(t *testing.T) {
 	}
 }
 
+func TestClientPromptEncodesEmptyWaitForServerDefaults(t *testing.T) {
+	t.Parallel()
+
+	socketPath := filepath.Join(t.TempDir(), "herdr.sock")
+	serveOne(t, socketPath, func(t *testing.T, request map[string]json.RawMessage) any {
+		var params map[string]json.RawMessage
+		decodeParams(t, request, &params)
+		wait, present := params["wait"]
+		if !present || string(wait) != "{}" {
+			t.Errorf("prompt wait = %s, want empty object", wait)
+		}
+		return map[string]any{
+			"id": requestID(t, request),
+			"result": map[string]any{
+				"type":  "agent_prompted",
+				"agent": map[string]any{"terminal_id": "term_4", "agent_status": "idle", "workspace_id": "w2", "tab_id": "w2:t1", "pane_id": "w2:p4", "focused": false, "revision": 2},
+			},
+		}
+	})
+
+	client, err := herdr.NewClient(socketPath)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	if _, err := client.Prompt(context.Background(), "w2:p4", "continue", herdr.PromptOptions{Wait: &herdr.PromptWait{}}); err != nil {
+		t.Fatalf("Prompt() error = %v", err)
+	}
+}
+
 func TestClientRejectsOversizedResponse(t *testing.T) {
 	t.Parallel()
 

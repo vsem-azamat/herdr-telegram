@@ -28,7 +28,11 @@ The public `herdr` Go package is a small standard-library client for Herdr's new
 
 Each unary call owns one socket connection. The decoder tolerates unknown response fields for forward compatibility, checks request correlation and result discriminators, surfaces typed server and transport-stage errors, bounds responses, and honors context cancellation. Event subscriptions require a separate long-lived connection and are later work.
 
+The SDK connects only to the explicit path supplied by its caller; it does not discover or authenticate a Herdr endpoint. The future bridge adapter remains responsible for the threat model's owner, mode, symlink, descriptor, and peer checks before using the client.
+
 For `agent.prompt`, a write- or read-stage transport failure can be ambiguous: the server may already have accepted the text. The SDK preserves the transport stage but does not retry automatically.
+
+`PromptWait` observes Herdr's agent lifecycle rather than correlating a completion to the submitted text. An empty `until` uses Herdr's `idle`, `done`, or `blocked` default. If a just-prompted non-working agent does not advance its lifecycle sequence, Herdr may return `agent_prompt_stalled`; this remains a typed `APIError`, not proof that the text was not accepted.
 
 Protocol 17 `agent.prompt` accepts `target`, `text`, and optional `wait`; it does not accept an expected native session. The SDK exposes that fact rather than adding a false safety abstraction. Automatic Telegram routing remains blocked by the stronger bridge invariant.
 

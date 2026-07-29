@@ -40,7 +40,9 @@ func WithMaxMessageBytes(limit int64) Option {
 	}
 }
 
-// NewClient creates a client for socketPath.
+// NewClient creates a client for the exact socketPath. It does not discover or
+// authenticate the endpoint; callers that cross a trust boundary must validate
+// the path and peer before use.
 func NewClient(socketPath string, options ...Option) (*Client, error) {
 	if strings.TrimSpace(socketPath) == "" {
 		return nil, errors.New("herdr: socket path is empty")
@@ -115,8 +117,9 @@ func (c *Client) GetAgent(ctx context.Context, target string) (AgentInfo, error)
 	return result.Agent, nil
 }
 
-// Prompt submits text to a Herdr agent target and optionally waits for state.
-// Herdr protocol 17 does not provide an expected-session precondition.
+// Prompt submits text to a Herdr agent target and optionally waits for lifecycle
+// state. The wait is not turn correlation. Protocol 17 also does not provide an
+// expected-session precondition.
 func (c *Client) Prompt(ctx context.Context, target, text string, options PromptOptions) (AgentInfo, error) {
 	params := struct {
 		Target string      `json:"target"`
