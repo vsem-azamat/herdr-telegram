@@ -24,7 +24,7 @@ A focused transport-only SDK checkpoint may precede these spikes. It may model a
 
 **Current checkpoint:** A disposable live probe verified that protocol 17 can prompt an explicit pane independently of focus. Tagged v0.7.5 schema/source and upstream development source at `73d92004f50d3f5fafe64e0f9b7fddbcf4d99965` (protocol 18) confirm that `agent.prompt` has no atomic expected-session precondition, so steps 5–8 below remain blocked on an upstream API change. Do not repeat the same client-side read-then-prompt experiment as if it could close that gap.
 
-[`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md) records the minimal backward-compatible proposal and required server-side race tests. Herdr server code and tests belong upstream and require explicit user authorization before opening an issue, fork, or PR. Until that implementation exists, this spike remains an explicit upstream blocker rather than evidence that the gate passed.
+[`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md) records the minimal backward-compatible proposal and required server-side race tests. The owner-authorized direction request is [Herdr Discussion #2016](https://github.com/ogulcancelik/herdr/discussions/2016); it is not an accepted contract or implementation. Herdr server code and tests belong upstream and require separate explicit user authorization before opening an issue, fork, or PR. Until that implementation exists, this spike remains an explicit upstream blocker rather than evidence that the gate passed.
 
 Prove on a disposable Herdr workspace that the server can protect the expected stable session atomically:
 

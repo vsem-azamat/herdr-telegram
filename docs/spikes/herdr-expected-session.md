@@ -169,4 +169,4 @@ After upstream support exists, this repository still needs redacted live fixture
 
 ## Upstream publication status
 
-No upstream issue or proposal URL is recorded. Publication was not authorized as part of this spike. Creating an issue, fork, implementation branch, or pull request requires separate explicit owner approval.
+With explicit owner approval, the contract gap was published as [Herdr Discussion #2016: Allow `agent.prompt` to check the expected session ID](https://github.com/ogulcancelik/herdr/discussions/2016). This is a direction request, not an accepted contract or implementation. Do not create an upstream issue, fork, implementation branch, or pull request without separate explicit owner approval and maintainer alignment.

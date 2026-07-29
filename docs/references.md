@@ -11,6 +11,7 @@ References are evidence, not hidden requirements. The repository's architecture 
 - [Herdr v0.7.5 release](https://github.com/ogulcancelik/herdr/releases/tag/v0.7.5) — current verified baseline.
 - [Herdr v0.7.5 tagged API schema source](https://github.com/ogulcancelik/herdr/tree/v0.7.5/src/api/schema) — exact request, response, snapshot, and agent field contracts used by the Go SDK fixtures.
 - [Herdr development source audited for the expected-session spike](https://github.com/ogulcancelik/herdr/tree/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965) — protocol 18 schema and server implementation reviewed on 2026-07-29; it still has no atomic expected-session prompt precondition. See [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md).
+- [Herdr Discussion #2016: Allow `agent.prompt` to check the expected session ID](https://github.com/ogulcancelik/herdr/discussions/2016) — owner-authorized upstream direction request for atomic stable-session dispatch; not yet an accepted contract or implementation.
 - [Issue #1270: retained event replay](https://github.com/ogulcancelik/herdr/issues/1270) — why snapshots are authoritative and event bootstrap needs buffering/reconciliation.
 - [Herdr contributing guide](https://github.com/ogulcancelik/herdr/blob/master/CONTRIBUTING.md) — project direction and proposal process.
 
