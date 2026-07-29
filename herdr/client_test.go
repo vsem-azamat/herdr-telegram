@@ -85,8 +85,9 @@ func TestClientPing(t *testing.T) {
 				"version":  "0.7.5",
 				"protocol": 17,
 				"capabilities": map[string]any{
-					"live_handoff":           true,
-					"detached_server_daemon": true,
+					"live_handoff":                  true,
+					"detached_server_daemon":        true,
+					"agent_prompt_expected_session": true,
 				},
 			},
 		}
@@ -115,6 +116,37 @@ func TestClientPing(t *testing.T) {
 	}
 	if got.Capabilities == nil || !got.Capabilities.DetachedServerDaemon {
 		t.Errorf("Ping().Capabilities = %#v, want detached server daemon", got.Capabilities)
+	}
+	if got.Capabilities == nil || !got.Capabilities.AgentPromptExpectedSession {
+		t.Errorf("Ping().Capabilities = %#v, want expected-session prompting", got.Capabilities)
+	}
+}
+
+func TestClientPingDefaultsExpectedSessionCapabilityFalse(t *testing.T) {
+	t.Parallel()
+
+	socketPath := filepath.Join(t.TempDir(), "herdr.sock")
+	serveOne(t, socketPath, func(t *testing.T, request map[string]json.RawMessage) any {
+		return map[string]any{
+			"id": requestID(t, request),
+			"result": map[string]any{
+				"type":         "pong",
+				"version":      "0.7.5",
+				"protocol":     17,
+				"capabilities": map[string]any{"live_handoff": false},
+			},
+		}
+	})
+	client, err := herdr.NewClient(socketPath)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	got, err := client.Ping(context.Background())
+	if err != nil {
+		t.Fatalf("Ping() error = %v", err)
+	}
+	if got.Capabilities == nil || got.Capabilities.AgentPromptExpectedSession {
+		t.Fatalf("Ping().Capabilities = %#v, want expected-session capability false", got.Capabilities)
 	}
 }
 
@@ -254,16 +286,17 @@ func TestClientGetAgentTargetsPane(t *testing.T) {
 	}
 }
 
-func TestClientPromptEncodesWaitOptions(t *testing.T) {
+func TestClientPromptEncodesExpectedSessionAndWaitOptions(t *testing.T) {
 	t.Parallel()
 
 	socketPath := filepath.Join(t.TempDir(), "herdr.sock")
 	serveOne(t, socketPath, func(t *testing.T, request map[string]json.RawMessage) any {
 		assertMethod(t, request, "agent.prompt")
 		var params struct {
-			Target string `json:"target"`
-			Text   string `json:"text"`
-			Wait   struct {
+			Target          string             `json:"target"`
+			Text            string             `json:"text"`
+			ExpectedSession herdr.AgentSession `json:"expected_session"`
+			Wait            struct {
 				Until     []herdr.AgentStatus `json:"until"`
 				TimeoutMS *uint64             `json:"timeout_ms"`
 			} `json:"wait"`
@@ -271,6 +304,14 @@ func TestClientPromptEncodesWaitOptions(t *testing.T) {
 		decodeParams(t, request, &params)
 		if params.Target != "w2:p4" || params.Text != "review this" {
 			t.Errorf("prompt target/text = %q/%q", params.Target, params.Text)
+		}
+		if params.ExpectedSession != (herdr.AgentSession{
+			Source: "herdr:codex",
+			Agent:  "codex",
+			Kind:   herdr.AgentSessionID,
+			Value:  "session-redacted",
+		}) {
+			t.Errorf("prompt expected_session = %#v", params.ExpectedSession)
 		}
 		if len(params.Wait.Until) != 2 || params.Wait.Until[0] != herdr.AgentStatusIdle || params.Wait.Until[1] != herdr.AgentStatusDone {
 			t.Errorf("prompt wait until = %#v", params.Wait.Until)
@@ -281,8 +322,11 @@ func TestClientPromptEncodesWaitOptions(t *testing.T) {
 		return map[string]any{
 			"id": requestID(t, request),
 			"result": map[string]any{
-				"type":  "agent_prompted",
-				"agent": map[string]any{"terminal_id": "term_4", "agent": "codex", "agent_status": "idle", "workspace_id": "w2", "tab_id": "w2:t1", "pane_id": "w2:p4", "focused": false, "state_change_seq": 8, "revision": 2},
+				"type": "agent_prompted",
+				"agent": map[string]any{
+					"terminal_id": "term_4", "agent": "codex", "agent_status": "idle", "workspace_id": "w2", "tab_id": "w2:t1", "pane_id": "w2:p4", "focused": false, "state_change_seq": 8, "revision": 2,
+					"agent_session": map[string]any{"source": "herdr:codex", "agent": "codex", "kind": "id", "value": "session-redacted"},
+				},
 			},
 		}
 	})
@@ -293,6 +337,12 @@ func TestClientPromptEncodesWaitOptions(t *testing.T) {
 	}
 	timeoutMS := uint64(1500)
 	got, err := client.Prompt(context.Background(), "w2:p4", "review this", herdr.PromptOptions{
+		ExpectedSession: &herdr.AgentSession{
+			Source: "herdr:codex",
+			Agent:  "codex",
+			Kind:   herdr.AgentSessionID,
+			Value:  "session-redacted",
+		},
 		Wait: &herdr.PromptWait{
 			Until:     []herdr.AgentStatus{herdr.AgentStatusIdle, herdr.AgentStatusDone},
 			TimeoutMS: &timeoutMS,
@@ -303,6 +353,9 @@ func TestClientPromptEncodesWaitOptions(t *testing.T) {
 	}
 	if got.PaneID != "w2:p4" {
 		t.Fatalf("Prompt().PaneID = %q, want %q", got.PaneID, "w2:p4")
+	}
+	if got.AgentSession == nil || got.AgentSession.Value != "session-redacted" {
+		t.Fatalf("Prompt().AgentSession = %#v, want expected session", got.AgentSession)
 	}
 }
 
@@ -316,6 +369,9 @@ func TestClientPromptOmitsWaitByDefault(t *testing.T) {
 		decodeParams(t, request, &params)
 		if _, present := params["wait"]; present {
 			t.Errorf("prompt params contain wait: %s", params["wait"])
+		}
+		if _, present := params["expected_session"]; present {
+			t.Errorf("prompt params contain expected_session: %s", params["expected_session"])
 		}
 		return map[string]any{
 			"id": requestID(t, request),
@@ -483,6 +539,13 @@ func TestClientPromptMarksPostDialFailuresAmbiguous(t *testing.T) {
 			check: func(err error) bool { var target *herdr.APIError; return errors.As(err, &target) },
 		},
 		{
+			name: "session mismatch without expected precondition",
+			respond: func(t *testing.T, request map[string]json.RawMessage) any {
+				return map[string]any{"id": requestID(t, request), "error": map[string]any{"code": herdr.ErrorCodeAgentSessionMismatch, "message": "unexpected rejection"}}
+			},
+			check: func(err error) bool { var target *herdr.APIError; return errors.As(err, &target) },
+		},
+		{
 			name: "mismatched response ID",
 			respond: func(*testing.T, map[string]json.RawMessage) any {
 				return map[string]any{"id": "other", "result": map[string]any{"type": "agent_prompted"}}
@@ -524,6 +587,41 @@ func TestClientPromptMarksPostDialFailuresAmbiguous(t *testing.T) {
 				t.Fatalf("Prompt() error = %v, underlying error type not preserved", err)
 			}
 		})
+	}
+}
+
+func TestClientPromptSessionMismatchIsKnownRejection(t *testing.T) {
+	t.Parallel()
+
+	socketPath := filepath.Join(t.TempDir(), "herdr.sock")
+	serveOne(t, socketPath, func(t *testing.T, request map[string]json.RawMessage) any {
+		return map[string]any{
+			"id": requestID(t, request),
+			"error": map[string]any{
+				"code":    "agent_session_mismatch",
+				"message": "agent target no longer hosts the expected session",
+			},
+		}
+	})
+	client, err := herdr.NewClient(socketPath)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	_, err = client.Prompt(context.Background(), "w1:p1", "private prompt", herdr.PromptOptions{
+		ExpectedSession: &herdr.AgentSession{
+			Source: "herdr:codex",
+			Agent:  "codex",
+			Kind:   herdr.AgentSessionID,
+			Value:  "session-redacted",
+		},
+	})
+	var apiErr *herdr.APIError
+	if !errors.As(err, &apiErr) || apiErr.Code != herdr.ErrorCodeAgentSessionMismatch {
+		t.Fatalf("Prompt() error = %v, want agent_session_mismatch APIError", err)
+	}
+	var ambiguous *herdr.AmbiguousPromptError
+	if errors.As(err, &ambiguous) {
+		t.Fatalf("Prompt() error = %v, mismatch response is a known rejection", err)
 	}
 }
 

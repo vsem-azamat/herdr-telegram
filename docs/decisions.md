@@ -146,4 +146,16 @@ See `technology.md`.
 
 **Reason:** Socket transport, envelopes, snapshots, agent records, and typed errors are independently useful and testable. They do not depend on proving the bridge's stable-session routing policy.
 
-**Boundary:** The SDK mirrors low-level `agent.prompt(target, text, wait?)` exactly and documents that protocol 17 has no atomic expected-session precondition. It must not expose a method whose name or contract implies session-safe dispatch. Telegram routing remains blocked until the stronger server-side guarantee exists.
+**Boundary:** The SDK mirrors low-level `agent.prompt` fields exactly. For legacy protocol 17 this means `target`, `text`, and optional `wait`; it may also encode the capability-gated `expected_session` extension implemented by a Herdr server. The SDK must not claim session-safe dispatch unless the caller first observes the affirmative capability. Telegram routing remains blocked until the stronger server-side guarantee is proven and the remaining Phase 0 gates pass.
+
+## D-019 — Temporary capability-gated Herdr fork compatibility
+
+**Decision:** During development, support the optional `agent.prompt.expected_session` contract implemented in the personal `vsem-azamat/herdr` fork. Treat the fork as a temporary compatibility dependency, not as a permanent product backend or evidence of upstream support.
+
+**Reason:** Reading a native Codex, Claude, or Pi session ID from a pane does not make dispatch atomic. The occupant can change between the read and an unconditional pane prompt. Provider session IDs normally identify resumable history, not a provider-supported input endpoint. Scraping provider files or process state would add fragile provider-specific code without closing the race.
+
+**Safety boundary:** Automatic prompting must require `ping.capabilities.agent_prompt_expected_session == true`, pass all four native session fields, and fail closed otherwise. A protocol number, local precheck, or recognized request shape is insufficient because older servers may ignore unknown fields.
+
+**Migration:** When ordinary upstream Herdr ships an equivalent accepted contract, remove the fork installation requirement and validate its advertised wire behavior. Keep the stable-session routing model; adapt only the capability/wire compatibility layer if upstream chooses a different shape.
+
+**Rejected:** Pane read followed by unconditional prompt, direct provider transcript/session scraping, and silently assuming every protocol-18 server implements the fork extension.

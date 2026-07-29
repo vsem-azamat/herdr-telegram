@@ -260,7 +260,7 @@ For a normal topic message:
 8. persist known result or `ambiguous`;
 9. enqueue Telegram response in the durable outbox.
 
-The implementation must prove protocol-17 explicit `pane_id` behavior and occupant-replacement race semantics with a disposable probe. If Herdr cannot atomically reject a target whose native session differs from the expected `AgentSessionKey`, normal text prompting must remain disabled and an upstream protocol change is required. A local precheck does not satisfy the invariant.
+The implementation must prove explicit `pane_id` behavior and occupant-replacement race semantics with a disposable capability-advertising server. During development that server may be the temporary personal Herdr fork, but the dependency must remain explicit and capability-gated until ordinary upstream Herdr ships an equivalent contract. If the server cannot atomically reject a target whose native session differs from the expected `AgentSessionKey`, normal text prompting must remain disabled. A local precheck does not satisfy the invariant.
 
 ## 9. Topic lifecycle
 

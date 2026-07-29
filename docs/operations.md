@@ -61,7 +61,7 @@ The independently installed package contains:
 5. Verify plugin exists and is enabled.
 6. Validate runtime descriptor and same-user Herdr socket.
 7. Validate Telegram with `getMe`, `getChat`, `getChatMember`, and `getWebhookInfo`.
-8. Refuse active webhook, missing forum support, missing `can_manage_topics`, insecure config, or protocol incompatibility.
+8. Refuse active webhook, missing forum support, missing `can_manage_topics`, insecure config, protocol incompatibility, or absent `agent_prompt_expected_session` capability when prompt routing is enabled.
 9. Open Herdr event subscription and buffer events.
 10. Fetch `session.snapshot`.
 11. Atomically install snapshot-derived route state through one reconciler.

@@ -38,7 +38,7 @@ See [Technology](docs/technology.md) for the concrete stack and operating constr
 
 ## Herdr Go SDK
 
-The initial public package wraps protocol 17 unary calls with bounded responses:
+The initial public package wraps Herdr unary calls with bounded responses. It models the protocol-17 baseline plus the capability-gated expected-session extension used by the temporary development fork:
 
 ```go
 client, err := herdr.NewClient(socketPath)
@@ -48,7 +48,7 @@ if err != nil {
 snapshot, err := client.Snapshot(ctx)
 ```
 
-Import it as `github.com/vsem-azamat/herdr-telegram/herdr`. [Compile-checked examples](herdr/example_test.go) show deadlines and typed error inspection. Event subscriptions are deferred. `NewClient` trusts the explicit socket endpoint; the bridge layer must perform the threat model's path and peer validation before construction. `Client.Prompt` mirrors Herdr's low-level pane/name target and does not provide atomic expected-session routing. Any non-dial prompt failure is an `AmbiguousPromptError` and must not be retried automatically.
+Import it as `github.com/vsem-azamat/herdr-telegram/herdr`. [Compile-checked examples](herdr/example_test.go) show deadlines and typed error inspection. Event subscriptions are deferred. `NewClient` trusts the explicit socket endpoint; the bridge layer must perform the threat model's path and peer validation before construction. `Client.Prompt` can encode `expected_session`, but callers must first require `ping.capabilities.agent_prompt_expected_session == true`; older servers may ignore the unknown field and prompt unconditionally. A received `agent_session_mismatch` is a known rejection. Other non-dial prompt failures are `AmbiguousPromptError` values and must not be retried automatically.
 
 ## Core invariants
 
@@ -95,7 +95,7 @@ Not included:
 
 | Document | Purpose |
 |---|---|
-| [`herdr`](herdr) | Typed Go client for Herdr's protocol 17 Unix-socket API |
+| [`herdr`](herdr) | Typed Go client for the Herdr protocol-17 baseline and capability-gated extensions |
 | [Current state](docs/current-state.md) | Shipped checkpoint, unresolved gates, and next-agent decision point |
 | [Architecture](docs/architecture.md) | Runtime model, identities, state, failure semantics |
 | [Decisions](docs/decisions.md) | Why the design takes this shape |
@@ -128,7 +128,7 @@ A detected Pi agent currently has no `agent_session`, confirming that process de
 
 ## Implementation posture
 
-The transport-only Herdr SDK was delivered before the bridge contract gates. It mirrors the upstream protocol without claiming stronger routing guarantees. In particular, its low-level `Prompt` method does not make session-safe dispatch atomic.
+The transport-only Herdr SDK was delivered before the bridge contract gates. It now models the optional expected-session field and capability implemented by the temporary [`vsem-azamat/herdr` fork](https://github.com/vsem-azamat/herdr/pull/1), without claiming that ordinary upstream Herdr supports it. Atomicity is a server property; SDK encoding alone does not make dispatch safe.
 
 Telegram bridge product phases remain blocked until all three Phase 0 contract families pass:
 

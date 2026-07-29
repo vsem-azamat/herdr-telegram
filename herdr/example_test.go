@@ -31,7 +31,18 @@ func ExampleClient_Prompt() {
 	if err != nil {
 		return
 	}
-	_, err = client.Prompt(ctx, "w1:p1", "continue", herdr.PromptOptions{})
+	server, err := client.Ping(ctx)
+	if err != nil || server.Capabilities == nil || !server.Capabilities.AgentPromptExpectedSession {
+		return // Fail closed: older servers may ignore expected_session.
+	}
+	_, err = client.Prompt(ctx, "w1:p1", "continue", herdr.PromptOptions{
+		ExpectedSession: &herdr.AgentSession{
+			Source: "herdr:codex",
+			Agent:  "codex",
+			Kind:   herdr.AgentSessionID,
+			Value:  "session-from-authoritative-snapshot",
+		},
+	})
 	var ambiguous *herdr.AmbiguousPromptError
 	if errors.As(err, &ambiguous) {
 		// The server may have accepted the prompt. Do not retry automatically.
