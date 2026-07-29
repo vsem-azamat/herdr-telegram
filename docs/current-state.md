@@ -43,7 +43,7 @@ The SDK provides one-request-per-connection Unix-socket NDJSON transport, contex
 
 During the 2026-07-29 handoff audit, `make check` passed. The audit did not run a fresh live Herdr, Telegram, or systemd probe.
 
-The SDK checkpoint was validated against Herdr v0.7.5 / protocol 17. Tagged upstream source remains the protocol reference; re-check current installed and upstream versions before relying on old observations.
+The SDK checkpoint was validated against Herdr v0.7.5 / protocol 17. The expected-session spike subsequently reviewed upstream `master` at `73d92004f50d3f5fafe64e0f9b7fddbcf4d99965`, which reports protocol 18 but still exposes no atomic expected-session prompt contract. Tagged source remains the SDK protocol reference; re-check current installed and upstream versions before relying on old observations.
 
 Verified in a disposable live probe:
 
@@ -55,10 +55,11 @@ No redacted Phase 0 fixture or transcript from that probe is tracked. Treat the 
 
 Critical unresolved gate:
 
-- protocol 17 `agent.prompt` accepts `target`, `text`, and optional `wait` only;
-- it has no atomic `expected_session`, generation, revision, compare-and-send, or idempotency precondition;
+- protocol 17 and the reviewed protocol 18 development source expose `agent.prompt` with `target`, `text`, and optional `wait` only;
+- neither has an atomic `expected_session`, generation, revision, compare-and-send, or idempotency precondition;
 - therefore a local `Snapshot → verify occupant → Prompt(pane)` sequence remains TOCTOU-vulnerable;
-- automatic Telegram-to-agent prompt routing must remain disabled until a server-side primitive is implemented and race-tested.
+- [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md) specifies the minimal optional field, capability negotiation, mismatch error, linearizable server behavior, and occupant-replacement race tests;
+- automatic Telegram-to-agent prompt routing must remain disabled until the server-side primitive is implemented, advertised, and race-tested.
 
 Prompt waiting observes Herdr lifecycle state, not completion correlated to the submitted turn. Any non-dial prompt failure is conservatively ambiguous and must not be retried automatically.
 
@@ -69,18 +70,13 @@ The other Phase 0 gate families are also not complete:
 
 Do not start bridge product phases merely because the SDK exists. Phase 0 remains the gate.
 
-## Next task
+## Next decision
 
-The default next repository task is the **Phase 0 expected-session contract specification** described in `implementation-plan.md`. Create `docs/spikes/herdr-expected-session.md` on one focused branch and:
+The Phase 0 expected-session contract specification is now recorded in [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md). Current upstream development source does not implement it, so Herdr server work remains an external blocker.
 
-1. re-check the latest authoritative Herdr schema and server implementation in a separate read-only upstream checkout;
-2. record whether a newer protocol already provides atomic expected-session dispatch;
-3. if it does not, specify the smallest backward-compatible request field, mismatch error, atomic server behavior, and occupant-replacement tests;
-4. record the upstream issue/proposal URL if the user authorizes publication.
+The owner must explicitly choose whether to authorize publication of an upstream proposal. Without that authorization, do not create an issue, fork, implementation branch, pull request, or public proposal, and do not record an upstream proposal URL. Herdr server code and race tests belong upstream, not in this repository.
 
-Herdr server implementation belongs in the upstream Herdr repository, not this repository. Do not edit, fork, publish to, or open a PR against upstream without explicit user authorization. This repository owns the bridge specification and should record the resulting protocol status and links.
-
-Do not start SDK event subscriptions, `internal/` bridge packages, plugin/systemd mutation probes, or Telegram prerequisite probes as the default continuation. They are separate later tasks with different acceptance evidence and prerequisites. If the user chooses a different Phase 0 family, update this handoff and keep it to one focused branch/PR.
+The other possible next tasks are separate Phase 0 plugin/systemd lifecycle or disposable Telegram prerequisite spikes. Do not start those, SDK event subscriptions, or `internal/` bridge packages implicitly; each needs an explicit task choice and its own focused branch/PR.
 
 ## First-session checklist
 
