@@ -16,6 +16,26 @@ Core standard-library packages:
 
 The daemon remains one process supervised by `systemd --user`.
 
+## Herdr SDK
+
+The public `herdr` Go package is a small standard-library client for Herdr's newline-delimited JSON Unix-socket API. Its first checkpoint includes bounded unary requests for:
+
+- `ping`;
+- `session.snapshot`;
+- `agent.list`;
+- `agent.get`;
+- `agent.prompt` with the protocol's optional wait object.
+
+Each unary call owns one socket connection. The decoder tolerates unknown response fields for forward compatibility, checks request correlation and result discriminators, surfaces typed server and transport-stage errors, bounds responses, and honors context cancellation. Event subscriptions require a separate long-lived connection and are later work.
+
+The SDK connects only to the explicit path supplied by its caller; it does not discover or authenticate a Herdr endpoint. The future bridge adapter remains responsible for the threat model's owner, mode, symlink, descriptor, and peer checks before using the client.
+
+For `agent.prompt`, every failure after a successful dial is conservatively wrapped in `AmbiguousPromptError`: the server may already have accepted the text. The wrapper preserves typed API, protocol, and transport errors through `errors.Is`/`errors.As`; the SDK never retries automatically. A dial-stage `TransportError` is the only failure classified as definitely not submitted.
+
+`PromptWait` observes Herdr's agent lifecycle rather than correlating a completion to the submitted text. An empty `until` uses Herdr's `idle`, `done`, or `blocked` default. If a just-prompted non-working agent does not advance its lifecycle sequence, Herdr may return `agent_prompt_stalled`; this is preserved as an `APIError` inside `AmbiguousPromptError`, not proof that the text was not accepted.
+
+Protocol 17 `agent.prompt` accepts `target`, `text`, and optional `wait`; it does not accept an expected native session. The SDK exposes that fact rather than adding a false safety abstraction. Automatic Telegram routing remains blocked by the stronger bridge invariant.
+
 ## SQLite
 
 The planned driver is `modernc.org/sqlite`, introduced in the persistence phase rather than the documentation baseline.
@@ -74,7 +94,7 @@ Additional linters must remain scoped and must not replace delivery work.
 github.com/vsem-azamat/herdr-telegram
 ```
 
-No remote is implied by this path. Reconsider it before the first public tag if publication moves elsewhere.
+The module path matches the public GitHub repository. Reconsider it before the first tag only if repository ownership moves.
 
 The `go` directive names the oldest supported toolchain line. CI reads the version from `go.mod` and resolves a compatible patch release. There is no patch-pinning `toolchain` directive.
 

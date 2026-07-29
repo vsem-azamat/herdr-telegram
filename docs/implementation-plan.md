@@ -16,7 +16,9 @@ This is the sole normative execution plan.
 
 ## Phase 0 — Contract spikes and lifecycle proof
 
-**Goal:** Resolve all three implementation-blocker families without product code.
+**Goal:** Resolve all three implementation-blocker families before Telegram bridge product code.
+
+A focused transport-only SDK checkpoint may precede these spikes. It may model and test Herdr's existing protocol, including low-level `agent.prompt`, but must not implement stable-session routing or claim an expected-session guarantee the server does not expose.
 
 ### Herdr explicit target spike
 
@@ -61,7 +63,7 @@ Against a disposable bot and pre-provisioned forum:
 - redacted Herdr request/response and race-test fixtures proving atomic expected-session dispatch, or an explicit upstream blocker with prompting disabled;
 - systemd/plugin lifecycle transcript covering disable/unlink and stale descriptors;
 - disposable Telegram prerequisite/recovery transcript with no production credentials;
-- updated normative documents. Product-code phases cannot start while any family remains unresolved.
+- updated normative documents. Telegram bridge product-code phases cannot start while any family remains unresolved.
 
 ## Phase 1 — Domain model
 
@@ -77,7 +79,7 @@ internal/domain/errors.go
 internal/domain/*_test.go
 ```
 
-At the first product-code commit, replace the temporary design-only guard in `tools/validate-docs` with checks for the expected package/test structure. The guard exists only to prove the documentation baseline contains no hidden implementation.
+At the first bridge product-code commit, replace the temporary `cmd/herdr-telegram` / `internal` guard in `tools/validate-docs` with checks for the expected package/test structure. A standalone `herdr` SDK package does not trigger that transition.
 
 Test:
 
@@ -94,29 +96,38 @@ Test:
 - one in-flight turn per topic;
 - no focus-derived route type exists.
 
-## Phase 2 — Herdr protocol adapter
+## Phase 2 — Herdr bridge adapter
 
-**Goal:** Parse and control Herdr through a narrow port.
+**Goal:** Reuse the public `herdr` SDK behind a narrow bridge port and add only protocol surfaces still required by the daemon.
 
-Create:
+Extend the public SDK instead of creating a second client:
 
 ```text
-internal/herdr/client.go
-internal/herdr/snapshot.go
-internal/herdr/events.go
+herdr/subscription.go
+herdr/controls.go
+herdr/*_test.go
+```
+
+Create bridge-specific policy and validation:
+
+```text
+internal/herdr/adapter.go
+internal/herdr/validation.go
 internal/herdr/*_test.go
 internal/herdr/testdata/
 ```
 
+The internal adapter must compose `herdr.Client`; it must not duplicate socket framing, unary envelopes, snapshot structs, prompt encoding, or typed errors.
+
 Test:
 
-- protocol/version handshake;
-- snapshot parsing for Claude, Codex, and no-session agent;
-- explicit pane prompt;
-- bounded read and allowlisted keys;
-- disconnect, malformed response, stale target;
-- event subscription acknowledgment and retained replay;
-- unknown fields tolerated, missing required semantics rejected.
+- live protocol/version compatibility through the public SDK;
+- bridge-required semantic validation for Claude, Codex, and no-session snapshots;
+- server-side expected-session prompt behavior once the Phase 0 protocol gate is resolved, including stale-target rejection; no adapter-side read-then-prompt substitute;
+- bounded reads and allowlisted controls added to the public SDK;
+- disconnect and malformed-response propagation through the adapter;
+- event subscription acknowledgment and retained replay on the deferred long-lived SDK connection;
+- unknown transport fields tolerated while missing bridge-required semantics fail closed.
 
 ## Phase 3 — Reconciler
 

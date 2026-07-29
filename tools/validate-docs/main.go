@@ -1,4 +1,4 @@
-// Command validate-docs checks the design-only repository baseline.
+// Command validate-docs checks repository documentation and policy invariants.
 package main
 
 import (
