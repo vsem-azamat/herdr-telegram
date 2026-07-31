@@ -1,6 +1,6 @@
 # Current state and agent handoff
 
-> Last updated: 2026-07-29. This is an orientation checkpoint, not a replacement for the normative architecture, decisions, threat model, operations guide, or implementation plan. Update it whenever a checkpoint changes what is shipped, blocked, or next.
+> Last updated: 2026-07-31. This is an orientation checkpoint, not a replacement for the normative architecture, decisions, threat model, operations guide, or implementation plan. Update it whenever a checkpoint changes what is shipped, blocked, or next.
 
 ## Read in this order
 
@@ -41,7 +41,7 @@ The SDK provides one-request-per-connection Unix-socket NDJSON transport, contex
 
 ## Verified facts and unresolved gates
 
-During the 2026-07-29 handoff audit, `make check` passed. The audit did not run a fresh live Herdr, Telegram, or systemd probe.
+During the 2026-07-31 lifecycle checkpoint, `make check` and the opt-in race-enabled plugin/systemd probe passed. No Telegram probe or production credential was used.
 
 The SDK checkpoint was validated against Herdr v0.7.5 / protocol 17. The expected-session spike subsequently reviewed upstream `master` at `73d92004f50d3f5fafe64e0f9b7fddbcf4d99965`, which reports protocol 18 but still exposes no atomic expected-session prompt contract. Tagged source remains the SDK protocol reference; re-check current installed and upstream versions before relying on old observations.
 
@@ -57,8 +57,8 @@ Expected-session gate status:
 
 - protocol 17 and the upstream protocol 18 source audited at `73d92004f50d3f5fafe64e0f9b7fddbcf4d99965` expose `agent.prompt` with `target`, `text`, and optional `wait` only;
 - a local `Snapshot → verify occupant → Prompt(pane)` sequence remains TOCTOU-vulnerable, including when the native ID is scraped directly from Codex, Claude, or Pi state;
-- with explicit approval, the personal `vsem-azamat/herdr` fork implements the proposed field, capability, mismatch error, and native-session wait pinning at commit `b610183d`; fork-only draft PR #1 records the change;
-- the fork passed its full test suite and a side-by-side disposable capability smoke test without replacing `/usr/bin/herdr`;
+- with explicit approval, personal-fork PR [`vsem-azamat/herdr#1`](https://github.com/vsem-azamat/herdr/pull/1) was independently reviewed, rebased onto upstream `02fe7d76`, validated, and squash-merged to fork `master` at `a8758ff3`;
+- the fork passed its full test suite and a side-by-side disposable capability smoke test; `~/.local/bin/herdr-expected-session` now points to the merged build while `/usr/bin/herdr` remains unchanged;
 - this repository's SDK can encode the field, but must require the affirmative capability because ordinary/older Herdr may ignore unknown request fields;
 - [`spikes/herdr-expected-session-live-probe.md`](spikes/herdr-expected-session-live-probe.md) records the redacted disposable Go-client probe: matching explicit-pane dispatch ignored focus, replacement failed with no rejected input, and a replacement session could not satisfy the accepted session's wait;
 - the expected-session compare-and-submit gate is proven for the temporary fork, but ordinary upstream Herdr has not adopted it and lifecycle status remains uncorrelated to a particular submitted turn;
@@ -66,20 +66,23 @@ Expected-session gate status:
 
 Prompt waiting observes Herdr lifecycle state, not completion correlated to the submitted turn. A correlated `agent_session_mismatch` response to an expected-session request is a known rejection; other non-dial prompt failures are conservatively ambiguous and must not be retried automatically.
 
-The other Phase 0 gate families are also not complete:
+Plugin/systemd lifecycle status:
 
-- plugin registration plus `systemd --user` lifecycle, including disable/unlink fencing;
-- disposable Telegram forum prerequisites and recovery behavior.
+- [`spikes/plugin-systemd-lifecycle.md`](spikes/plugin-systemd-lifecycle.md) records a disposable Linux probe of atomic one-shot descriptor publication, a separately installed transient systemd companion, bounded restart policy, sequential disable/unlink denial, Herdr restart refresh, stale descriptor replay rejection, and unsafe-mode rejection;
+- the coordinated race also proves that `plugin.list(enabled)` followed by a separate mutation is not a revocation fence: an operation already past the check can commit after `plugin disable` returns;
+- the lifecycle family therefore remains blocked pending an accepted atomic enabled/installed precondition or equivalent lifecycle authority.
+
+The disposable Telegram forum prerequisites and recovery family is also incomplete.
 
 Do not start bridge product phases merely because the SDK exists. Phase 0 remains the gate.
 
 ## Next decision
 
-The current focused task is SDK compatibility for the temporary expected-session fork contract. It must remain a low-level, capability-gated wire extension and must not start automatic routing or `internal/` bridge packages.
+The current focused task is the Phase 0 plugin/systemd lifecycle spike. Its feasible descriptor/restart behavior is now recorded, but the deterministic disable race is a release blocker.
 
-The contract gap is published as [Herdr Discussion #2016](https://github.com/ogulcancelik/herdr/discussions/2016), but no upstream maintainer has accepted it. The personal fork is temporary development infrastructure. Do not open an issue or PR against `ogulcancelik/herdr` without separate explicit owner approval and maintainer alignment.
+The expected-session contract gap is published as [Herdr Discussion #2016](https://github.com/herdrdev/herdr/discussions/2016), but no upstream maintainer has accepted it. The personal fork remains temporary development infrastructure. Do not open another issue or PR against `herdrdev/herdr` without separate explicit owner approval and maintainer alignment.
 
-After this SDK checkpoint, the expected-session compare-and-submit evidence is complete for the temporary fork. The plugin/systemd lifecycle and Telegram prerequisite spikes are still incomplete, and `PromptWait` does not correlate completion to the submitted turn. Choose each as a separate focused task; do not start product routing merely because the fork probe passed.
+The next decision is whether to seek Herdr direction on a server-owned atomic plugin-enabled mutation precondition, or explicitly revise the plugin lifecycle authority through a new reviewed decision. Do not invent a registry-lock workaround. The Telegram prerequisite spike is a separate remaining Phase 0 task, and `PromptWait` still does not correlate completion to the submitted turn. Product routing stays disabled.
 
 ## First-session checklist
 

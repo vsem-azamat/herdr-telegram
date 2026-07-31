@@ -16,7 +16,7 @@ systemd --user
             └── SQLite state
 ```
 
-Herdr startup hooks are not supervision. They only publish the current `HERDR_SOCKET_PATH`, `HERDR_BIN_PATH`, plugin config directory, plugin state directory, Herdr version/protocol, and stable configured instance ID into a restrictive runtime descriptor.
+Herdr startup hooks are not supervision. They only publish the current `HERDR_SOCKET_PATH`, `HERDR_BIN_PATH`, plugin config directory, plugin state directory, Herdr version/protocol, stable configured instance ID, and ephemeral server process identity into a restrictive runtime descriptor. The Linux Phase 0 spike used PID plus `/proc` start time to reject a stale descriptor even when a restarted server reused the same socket path; the final descriptor schema remains a packaging-phase contract.
 
 ## Packaging boundary
 
@@ -45,8 +45,8 @@ The independently installed package contains:
 | systemd service starts | Validate config/state, plugin enabled state, descriptor, Herdr socket, Telegram prerequisites |
 | Daemon crashes | systemd restarts with bounded backoff |
 | Herdr restarts/handoffs | Subscription reconnects; fresh descriptor/snapshot wins; routes rebuild |
-| Plugin disabled | Every mutation fails closed on enabled-state check; health reports disabled |
-| Plugin unlinked/uninstalled | Same fail-closed behavior; operator may then stop/remove service |
+| Plugin disabled | New mutations fail closed and health reports disabled; release is blocked until revocation is linearized with mutation acceptance rather than implemented as a separate preflight check |
+| Plugin unlinked/uninstalled | Same fail-closed and atomic-revocation requirement; operator may then stop/remove service |
 | User logout | User service stops unless linger is explicitly configured |
 | Machine reboot | User service starts according to enable/linger policy; waits safely for valid Herdr registration |
 | Package update | Stop service, migrate/validate, restart, reconcile; never retry ambiguous turns |
@@ -58,8 +58,8 @@ The independently installed package contains:
 2. Apply transactional forward-only migrations.
 3. Acquire singleton lock and durable fencing generation.
 4. Load and validate persisted Herdr instance identity.
-5. Verify plugin exists and is enabled.
-6. Validate runtime descriptor and same-user Herdr socket.
+5. Verify plugin exists and is enabled; do not mistake this startup/preflight check for the required mutation-time revocation fence.
+6. Validate the versioned runtime descriptor, stable instance identity, live server process identity, and same-user Herdr socket.
 7. Validate Telegram with `getMe`, `getChat`, `getChatMember`, and `getWebhookInfo`.
 8. Refuse active webhook, missing forum support, missing `can_manage_topics`, insecure config, protocol incompatibility, or absent `agent_prompt_expected_session` capability when prompt routing is enabled.
 9. Open Herdr event subscription and buffer events.

@@ -14,7 +14,7 @@ Core standard-library packages:
 - `net` for Unix sockets;
 - `embed` for migrations and service assets.
 
-The planned daemon is one process supervised by `systemd --user`.
+The planned daemon is one process supervised by `systemd --user`. The Phase 0 lifecycle probe uses a transient user unit only as disposable evidence; it does not add a service or daemon implementation to this repository. Its candidate unit policy uses `Restart=on-failure`, bounded restart delay/burst, and a separately installed executable.
 
 ## Herdr SDK
 

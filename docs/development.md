@@ -60,6 +60,15 @@ HERDR_EXPECTED_SESSION_BIN="$HOME/.local/bin/herdr-expected-session" \
 
 Do not point this probe at an active user Herdr process or production agent session. The test first requires the capability and uses only its temporary socket endpoint.
 
+The Linux plugin/systemd lifecycle probe is also opt-in. It links a generated plugin only in a temporary Herdr registry and launches a uniquely named transient user unit:
+
+```text
+HERDR_PLUGIN_LIFECYCLE_BIN="$HOME/.local/bin/herdr-expected-session" \
+  go test -race ./spikes -run '^TestPluginSystemdLifecycleLive$' -v
+```
+
+It performs no terminal-agent or Telegram mutation. Its accepted side effect is a marker in `testing.T.TempDir`; cleanup stops the transient unit and disposable Herdr process.
+
 ## Validation style
 
 Do not add a general validation framework by default.

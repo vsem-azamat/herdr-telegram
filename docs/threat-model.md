@@ -122,6 +122,19 @@ Herdr plugins run as the local user and are not sandboxed. Local compromise is o
 - operator recovery from inside the visible topic;
 - confirmed retry only when the operator verifies absence.
 
+### Plugin revocation race
+
+**Threat:** The daemon observes the plugin enabled, the operator disables or unlinks it, and an already-authorized remote mutation commits after revocation returns.
+
+**Controls:**
+
+- restrictive versioned runtime descriptor with stable instance and live server process identity;
+- revalidate installed/enabled state for every mutation attempt;
+- require a server-owned or equivalently atomic revocation precondition before release;
+- do not claim that `plugin.list`, registry polling, filesystem watches, or stopping the service close the check-to-mutation race.
+
+**Current blocker:** The disposable lifecycle spike reproduced this race deterministically. Sequential requests after disable/unlink are denied, but atomic revocation is not yet available.
+
 ### Competing daemon or stale process
 
 **Threat:** Two daemon instances prompt agents or send notifications.

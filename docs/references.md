@@ -8,14 +8,15 @@ References are evidence, not hidden requirements. The repository's architecture 
 - [Socket API](https://herdr.dev/docs/socket-api/) — snapshots, panes, agents, events, protocol stability, and raw request shapes.
 - [CLI reference](https://herdr.dev/docs/cli-reference/) — portable wrappers and plugin commands.
 - [Plugin marketplace](https://herdr.dev/plugins/) — community discovery model.
-- [Herdr v0.7.5 release](https://github.com/ogulcancelik/herdr/releases/tag/v0.7.5) — current verified baseline.
-- [Herdr v0.7.5 tagged API schema source](https://github.com/ogulcancelik/herdr/tree/v0.7.5/src/api/schema) — exact request, response, snapshot, and agent field contracts used by the Go SDK fixtures.
-- [Herdr development source audited for the expected-session spike](https://github.com/ogulcancelik/herdr/tree/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965) — protocol 18 schema and server implementation reviewed on 2026-07-29; it still has no atomic expected-session prompt precondition. See [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md).
-- [Herdr Discussion #2016: Allow `agent.prompt` to check the expected session ID](https://github.com/ogulcancelik/herdr/discussions/2016) — owner-authorized upstream direction request for atomic stable-session dispatch; not yet an accepted upstream contract.
-- [Personal Herdr fork draft PR #1](https://github.com/vsem-azamat/herdr/pull/1) — temporary development implementation of the capability-gated expected-session contract. Conceptual lesson: native provider session identity is useful only when the server compares it atomically with pane input; reading or scraping the ID before an unconditional prompt does not close the occupant-replacement race. No fork source or tests are copied into this repository.
+- [Herdr v0.7.5 release](https://github.com/herdrdev/herdr/releases/tag/v0.7.5) — current verified baseline.
+- [Herdr v0.7.5 tagged API schema source](https://github.com/herdrdev/herdr/tree/v0.7.5/src/api/schema) — exact request, response, snapshot, and agent field contracts used by the Go SDK fixtures.
+- [Herdr development source audited for the expected-session spike](https://github.com/herdrdev/herdr/tree/73d92004f50d3f5fafe64e0f9b7fddbcf4d99965) — protocol 18 schema and server implementation reviewed on 2026-07-29; it still had no atomic expected-session prompt precondition. See [`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md).
+- [Herdr Discussion #2016: Allow `agent.prompt` to check the expected session ID](https://github.com/herdrdev/herdr/discussions/2016) — owner-authorized upstream direction request for atomic stable-session dispatch; not yet an accepted upstream contract.
+- [Personal Herdr fork PR #1](https://github.com/vsem-azamat/herdr/pull/1) — independently reviewed temporary implementation of the capability-gated expected-session contract, squash-merged only to the personal fork. Conceptual lesson: native provider session identity is useful only when the server compares it atomically with pane input; reading or scraping the ID before an unconditional prompt does not close the occupant-replacement race. No fork source or tests are copied into this repository.
 - [Disposable expected-session live probe](spikes/herdr-expected-session-live-probe.md) — redacted local evidence produced through this repository's Go client and disposable Herdr resources; no production credentials or active user sessions.
-- [Issue #1270: retained event replay](https://github.com/ogulcancelik/herdr/issues/1270) — why snapshots are authoritative and event bootstrap needs buffering/reconciliation.
-- [Herdr contributing guide](https://github.com/ogulcancelik/herdr/blob/master/CONTRIBUTING.md) — project direction and proposal process.
+- [Disposable plugin/systemd lifecycle probe](spikes/plugin-systemd-lifecycle.md) — redacted local evidence for descriptor/restart behavior and the unresolved atomic plugin-revocation race.
+- [Issue #1270: retained event replay](https://github.com/herdrdev/herdr/issues/1270) — why snapshots are authoritative and event bootstrap needs buffering/reconciliation.
+- [Herdr contributing guide](https://github.com/herdrdev/herdr/blob/master/CONTRIBUTING.md) — project direction and proposal process.
 
 ## Telegram Bot API — authoritative
 

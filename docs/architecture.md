@@ -254,9 +254,9 @@ For a normal topic message:
 2. admit/deduplicate the update;
 3. resolve `TopicBinding`;
 4. resolve one current `LiveRoute`;
-5. verify plugin enabled state and daemon fence;
+5. verify plugin enabled state and daemon fence; this preflight is necessary but cannot by itself provide revocation atomicity;
 6. persist `dispatching` with the expected `AgentSessionKey`, pane, route generation, and daemon generation;
-7. issue one explicit pane-targeted `agent.prompt` request that carries the expected-session precondition atomically and requests semantic wait;
+7. issue one explicit pane-targeted `agent.prompt` request that carries the expected-session precondition atomically and requests semantic wait; product release additionally requires plugin enabled/installed state to be linearized with mutation acceptance rather than checked in a separate call;
 8. persist known result or `ambiguous`;
 9. enqueue Telegram response in the durable outbox.
 
@@ -299,11 +299,11 @@ Telegram responses are written to an outbox before send. Delivery is at-least-on
 Herdr `[[startup]]` hooks are one-shot. Linux MVP uses `systemd --user` for supervision.
 
 - companion daemon package installed independently;
-- plugin startup refreshes restrictive runtime descriptor;
-- systemd restarts daemon on failure;
-- daemon waits for valid descriptor/socket;
+- plugin startup atomically refreshes a restrictive, versioned runtime descriptor carrying stable configured instance identity and ephemeral server process identity;
+- systemd restarts daemon on failure with bounded restart policy;
+- daemon waits for a valid same-UID descriptor/socket and rejects stale process identity;
 - each mutation confirms plugin is still installed and enabled;
-- disable/unlink fails closed even if service remains alive;
+- disable/unlink must linearize revocation with mutation acceptance even if the service remains alive; the disposable spike proves that a separate `plugin.list` check is TOCTOU-vulnerable, so this remains blocked;
 - purge is separate from uninstall.
 
 See `operations.md`.
