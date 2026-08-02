@@ -57,7 +57,7 @@ Phase 4 must verify these properties and record build-size and operational impac
 Use a small direct adapter over `net/http`. The implementation must expose and test:
 
 - `update_id` and durable offset advancement;
-- forum topic identity;
+- private bot topic identity and `getMe.has_topics_enabled` capability;
 - `409` competing-poller failures;
 - `429.retry_after`;
 - malformed and `ok:false` responses;

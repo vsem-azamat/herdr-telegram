@@ -20,7 +20,7 @@ MVP supports exactly:
 
 ```text
 one bot
-one forum supergroup
+one allowlisted private chat with bot topic mode
 one Herdr server
 one local daemon
 one SQLite database
@@ -38,7 +38,7 @@ bot_instance_id
 + normalized_topic_id
 ```
 
-Telegram's general topic identity must be normalized deliberately; omitted, `null`, and zero-like values must not become separate destinations accidentally. Routed input requires an actual forum topic in MVP.
+Private bot chats with topic mode use `message_thread_id` for their forum topics even though `getChat.type` is `private` and `getChat.is_forum` is not the capability signal. Topic identity must be normalized deliberately; omitted, `null`, and zero-like values must not become separate destinations accidentally. Routed input requires `chat.type == private`, the exact configured chat/user identity, `is_topic_message == true`, a valid nonzero thread ID, and absence of `business_connection_id` and `guest_query_id` in MVP.
 
 ### AgentSessionKey
 
@@ -150,7 +150,7 @@ No ORM. Live routes and replay fingerprints stay in memory unless tests prove pe
 ## 5. Invariants
 
 1. One topic maps to at most one stable agent session.
-2. One stable session maps to at most one active topic in the forum.
+2. One stable session maps to at most one active topic in the configured private bot chat.
 3. No input is sent without exactly one validated live route.
 4. Focus is never a routing input or fallback.
 5. Prompt release requires a server-side atomic expected-session condition; daemon-side read-then-prompt revalidation alone cannot close the occupant-replacement race.
@@ -250,7 +250,7 @@ Only a failure known to have occurred before Telegram acceptance may retry autom
 
 For a normal topic message:
 
-1. validate the complete Telegram envelope and allowlists;
+1. validate the complete private-chat Telegram envelope, exact chat/user allowlists, and topic identity;
 2. admit/deduplicate the update;
 3. resolve `TopicBinding`;
 4. resolve one current `LiveRoute`;

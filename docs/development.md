@@ -26,6 +26,12 @@ Hooks are convenience checks. Pre-commit validates an isolated copy of the stage
 
 `go.sum` authenticates downloaded module content; it is not a fully pinned environment lockfile. Toolchain compatibility is declared by `go.mod` and verified in CI.
 
+## Local Telegram development credentials
+
+Use `.env.example` only as a key-name template. Keep the real bot token outside the worktree in a same-user mode-`0600` regular file under a mode-`0700` directory, and set `BOT_TOKEN_FILE` to its absolute path. `.env` may contain the non-secret development `ADMIN_ID` and private `CHAT_ID`, remains ignored, and should also use mode `0600`.
+
+Never source or print `.env` in CI, place the token in a Bot API command-line argument, or use an intended production bot in automated tests. Live mutation probes require explicit disposable-resource approval.
+
 ## Commands
 
 ```text

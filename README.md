@@ -53,7 +53,7 @@ Import it as `github.com/vsem-azamat/herdr-telegram/herdr`. [Compile-checked exa
 ## Core invariants
 
 1. A Telegram topic maps to at most one stable Herdr agent session.
-2. A stable agent session maps to at most one active topic in the configured forum.
+2. A stable agent session maps to at most one active topic in the configured private bot chat.
 3. Input is sent only after the session resolves to exactly one live pane.
 4. The focused pane is never used as a fallback.
 5. Release is blocked until Herdr can atomically submit to a pane only when it still hosts the expected native session; a daemon-side precheck alone is not sufficient.
@@ -68,7 +68,7 @@ Import it as `github.com/vsem-azamat/herdr-telegram/herdr`. [Compile-checked exa
 Included:
 
 - one Telegram bot;
-- one allowlisted forum supergroup;
+- one allowlisted private chat with a bot whose private topic mode is enabled;
 - one Herdr server/socket;
 - Claude and Codex sessions with native session identity;
 - automatic topic creation with a circuit breaker;
@@ -88,7 +88,7 @@ Not included:
 - automatic agent start/resume when a session is missing;
 - terminal-byte mirroring;
 - automatic destructive topic or pane lifecycle;
-- multiple bots, forums, or Herdr servers;
+- multiple bots, private chats/topic spaces, or Herdr servers;
 - web dashboards or Telegram Mini Apps.
 
 ## Repository map
@@ -134,7 +134,7 @@ Telegram bridge product phases remain blocked until all three Phase 0 contract f
 
 - atomic expected-session behavior for explicit `agent.prompt.target`, including occupant replacement races (proven for the temporary fork, not yet ordinary upstream Herdr);
 - exact `systemd --user` and Herdr plugin disable/unlink lifecycle (descriptor/restart and sequential denial proven; atomic revocation race remains blocked);
-- Telegram forum prerequisites and operator recovery;
+- Telegram private-topic prerequisites and operator recovery;
 
 Implementation proceeds TDD-first, one focused PR at a time, with separate specification and quality reviews. Agents must not publish, merge, or enable the bridge against production Telegram without explicit human approval.
 

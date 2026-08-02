@@ -60,8 +60,8 @@ The independently installed package contains:
 4. Load and validate persisted Herdr instance identity.
 5. Verify plugin exists and is enabled; do not mistake this startup/preflight check for the required mutation-time revocation fence.
 6. Validate the versioned runtime descriptor, stable instance identity, live server process identity, and same-user Herdr socket.
-7. Validate Telegram with `getMe`, `getChat`, `getChatMember`, and `getWebhookInfo`.
-8. Refuse active webhook, missing forum support, missing `can_manage_topics`, insecure config, protocol incompatibility, or absent `agent_prompt_expected_session` capability when prompt routing is enabled.
+7. Validate Telegram with `getMe`, `getChat`, and `getWebhookInfo`.
+8. Refuse active webhook, `getMe.has_topics_enabled != true`, wrong bot/private-chat identity, non-private chat type, insecure config, protocol incompatibility, or absent `agent_prompt_expected_session` capability when prompt routing is enabled. Group privacy mode, membership, and `can_manage_topics` are not used for private bot chats.
 9. Open Herdr event subscription and buffer events.
 10. Fetch `session.snapshot`.
 11. Atomically install snapshot-derived route state through one reconciler.
@@ -118,7 +118,7 @@ fatal_competing_poller
 - daemon/service version;
 - Herdr version/protocol/instance ID;
 - plugin installed/enabled state;
-- Telegram bot and forum identity;
+- Telegram bot, private chat, and private-topic capability identity;
 - last successful poll and snapshot;
 - next update offset;
 - active/offline/conflicted routes;

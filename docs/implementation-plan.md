@@ -59,10 +59,10 @@ Prove before this family passes:
 
 ### Telegram prerequisites spike
 
-Against a disposable bot and pre-provisioned forum:
+Against a disposable topic-enabled bot and private user chat:
 
-- validate `getMe`, `getChat`, `getChatMember`, `getWebhookInfo`;
-- prove privacy/admin requirements;
+- validate `getMe.has_topics_enabled`, exact bot identity, `getChat` private identity, and `getWebhookInfo`;
+- prove the private-topic envelope matrix, including rejection of business/guest namespaces; group privacy/admin/member checks are explicitly inapplicable;
 - capture `409`, `429`, malformed response, and ambiguous timeout fixtures where practical;
 - document manual setup and cleanup.
 
@@ -223,7 +223,6 @@ Methods:
 ```text
 getMe
 getChat
-getChatMember
 getWebhookInfo
 getUpdates
 sendMessage
@@ -368,7 +367,7 @@ Test authentication, revalidation, rate/length limits, route replacement during 
 
 ## Phase 10 — Disposable live E2E
 
-Use a pre-provisioned disposable forum and disposable Herdr sessions.
+Use a pre-provisioned disposable topic-enabled bot/private chat and disposable Herdr sessions.
 
 Required scenarios:
 

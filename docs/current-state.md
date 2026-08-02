@@ -1,6 +1,6 @@
 # Current state and agent handoff
 
-> Last updated: 2026-07-31. This is an orientation checkpoint, not a replacement for the normative architecture, decisions, threat model, operations guide, or implementation plan. Update it whenever a checkpoint changes what is shipped, blocked, or next.
+> Last updated: 2026-08-02. This is an orientation checkpoint, not a replacement for the normative architecture, decisions, threat model, operations guide, or implementation plan. Update it whenever a checkpoint changes what is shipped, blocked, or next.
 
 ## Read in this order
 
@@ -72,7 +72,12 @@ Plugin/systemd lifecycle status:
 - the coordinated race also proves that `plugin.list(enabled)` followed by a separate mutation is not a revocation fence: an operation already past the check can commit after `plugin disable` returns;
 - the lifecycle family therefore remains blocked pending an accepted atomic enabled/installed precondition or equivalent lifecycle authority.
 
-The disposable Telegram forum prerequisites and recovery family is also incomplete.
+Telegram prerequisite status:
+
+- Bot API 10.2 now supports forum topic mode in private bot chats, so D-021 replaces the stale supergroup assumption with the intended one-user private-chat model;
+- a redacted read-only probe of the newly provisioned development bot returned `topics_enabled=true`, `users_may_create_topics=true`, `webhook_empty=true`, zero pending updates, and an exact configured `type=private` chat identity;
+- `.env` is ignored, remains untracked, and was corrected from mode `0644` to `0600`; the token was then moved outside the worktree to a mode-`0600` file under a mode-`0700` config directory, and no token value was printed or placed in process arguments;
+- no topic was created, edited, deleted, polled, or messaged, so disposable mutation, envelope, `409`, recovery, and cleanup evidence remains incomplete.
 
 Do not start bridge product phases merely because the SDK exists. Phase 0 remains the gate.
 
@@ -82,7 +87,9 @@ The current focused task is the Phase 0 plugin/systemd lifecycle spike. Its feas
 
 The expected-session contract gap is published as [Herdr Discussion #2016](https://github.com/herdrdev/herdr/discussions/2016), but no upstream maintainer has accepted it. The personal fork remains temporary development infrastructure. Do not open another issue or PR against `herdrdev/herdr` without separate explicit owner approval and maintainer alignment.
 
-The next decision is whether to seek Herdr direction on a server-owned atomic plugin-enabled mutation precondition, or explicitly revise the plugin lifecycle authority through a new reviewed decision. Do not invent a registry-lock workaround. The Telegram prerequisite spike is a separate remaining Phase 0 task, and `PromptWait` still does not correlate completion to the submitted turn. Product routing stays disabled.
+[Herdr Discussion #2192](https://github.com/herdrdev/herdr/discussions/2192) now asks for direction on a server-owned atomic plugin-enabled mutation precondition; there is no maintainer response yet. Do not invent a registry-lock workaround or open an upstream PR without alignment.
+
+For Telegram, the next gate is explicit approval to treat the new development bot/private chat as disposable for topic mutation and polling-conflict tests, including permission to create/delete clearly named test topics and rotate the token if an outcome becomes ambiguous. `PromptWait` still does not correlate completion to the submitted turn. Product routing stays disabled.
 
 ## First-session checklist
 
