@@ -4,9 +4,9 @@ This is a compact decision log. It records current choices, reasons, rejected al
 
 ## D-001 — Telegram-oriented, not provider-neutral
 
-**Decision:** Support Telegram forum topics only.
+**Decision:** Support Telegram forum topics inside one allowlisted private bot chat only.
 
-**Reason:** Provider-neutral abstractions would force the domain to model the least common denominator before the first real workflow is proven. Telegram-specific behavior—forum topics, update offsets, bot privacy, `message_thread_id`, `429.retry_after`, and ambiguous topic creation—is central rather than incidental.
+**Reason:** Current Bot API supports bot topic mode in private chats, matching the intended one-user UX without a supergroup. Provider-neutral abstractions would force the domain to model the least common denominator before the first real workflow is proven. Telegram-specific behavior—private topic mode, update offsets, `message_thread_id`, `429.retry_after`, and ambiguous topic creation—is central rather than incidental.
 
 **Rejected:** A generic `ChatBackend` for Telegram, Slack, Discord, and Matrix.
 
@@ -169,3 +169,15 @@ See `technology.md`.
 **Required contract:** Before product mutation routing, one authority must linearize plugin enabled/installed state with mutation acceptance. A possible server-owned precondition needs separate Herdr direction and protocol review; it is not approved merely by naming it here. Holding Herdr's private plugin-registry lock around a socket request is rejected because the lock/format is not public and can deadlock against the server actor processing both operations.
 
 **Consequence:** Sequential post-disable and post-unlink requests fail closed in the spike, but the Phase 0 lifecycle family remains blocked. Automatic Telegram-to-agent routing stays disabled.
+
+## D-021 — Private bot topic mode replaces the supergroup
+
+**Decision:** Bind sessions to topics in one configured private chat with the bot. Do not require or support a forum supergroup in MVP.
+
+**Reason:** Bot API 10.2 documents `User.has_topics_enabled`, `User.allows_users_to_create_topics`, `message_thread_id` for private bot chats, and `createForumTopic`/`editForumTopic` for a private chat with a user. A redacted read-only probe of the newly provisioned development bot returned topic mode enabled, user topic creation enabled, no webhook, and the configured chat as `type=private`.
+
+**Admission contract:** Require the exact configured private `chat.id`, exact allowlisted `from.id`, `from.is_bot == false`, no `sender_chat`, `is_topic_message == true`, a valid nonzero `message_thread_id`, and no `business_connection_id` or `guest_query_id`. The latter fields select alternate Telegram namespaces even when numeric identities overlap and therefore fail closed. The configured chat and user IDs may be numerically equal but are validated as separate envelope fields. Unknown or unbound topics fail closed.
+
+**Prerequisites:** Require `getMe.has_topics_enabled == true`, exact bot identity, `getChat.type == private`, exact chat identity, and an empty webhook. Group privacy mode, `getChatMember`, administrator status, and `can_manage_topics` are not private-chat prerequisites.
+
+**Consequence:** Existing supergroup-specific requirements and fixtures are obsolete and must be replaced before Telegram adapter work. The read-only probe is not disposable mutation/recovery evidence; topic creation, ambiguous outcomes, polling conflicts, and cleanup remain Phase 0 gates.

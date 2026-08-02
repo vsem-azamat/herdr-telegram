@@ -42,11 +42,12 @@ Herdr plugins run as the local user and are not sandboxed. Local compromise is o
 
 **Controls:**
 
-- exact allowlist of one `chat_id` and explicit user IDs;
-- require `chat.type == supergroup`;
-- require routed messages to be topic messages with normalized `message_thread_id`;
+- exact allowlist of one private `chat_id` and explicit user IDs;
+- require `chat.type == private` and validate chat ID separately from `from.id`, even when Telegram assigns them the same numeric value;
+- require routed messages to have `is_topic_message == true` and a normalized nonzero `message_thread_id`;
 - require `from`, reject `from.is_bot`, reject `sender_chat`;
-- reject edited messages, channel posts, business updates, anonymous admins, and automatic forwards;
+- reject messages carrying `business_connection_id` or `guest_query_id`, which select alternate namespaces even when chat IDs overlap;
+- reject edited messages, channel posts, business updates, guest-query updates, anonymous admins, and automatic forwards;
 - configure an explicit `allowed_updates` set;
 - durable audit outcome for every admitted/ignored update.
 
@@ -60,7 +61,7 @@ Herdr plugins run as the local user and are not sandboxed. Local compromise is o
 - verify owner, file type, and non-symlink status where practical;
 - never log Bot API URLs containing the token;
 - redact exceptions/traces;
-- detect webhook configuration and competing poller `409`;
+- require private topic mode from `getMe`, detect webhook configuration, and detect competing poller `409`;
 - documented token rotation and state-preserving recovery.
 
 **Residual risk:** Bot-token compromise remains severe. Rotation cannot undo prompts already delivered.

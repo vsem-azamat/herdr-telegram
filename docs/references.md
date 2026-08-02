@@ -20,22 +20,24 @@ References are evidence, not hidden requirements. The repository's architecture 
 
 ## Telegram Bot API — authoritative
 
-- [Bot API](https://core.telegram.org/bots/api)
+- [Bot API 10.2 documentation observed 2026-08-02](https://core.telegram.org/bots/api)
 - [`getUpdates`](https://core.telegram.org/bots/api#getupdates) — offset confirmation semantics and long polling.
 - [`Update`](https://core.telegram.org/bots/api#update) — update identity and supported payloads.
-- [`Message`](https://core.telegram.org/bots/api#message) — `message_thread_id`, `is_topic_message`, sender and forward fields.
+- [`User`](https://core.telegram.org/bots/api#user) / [`getMe`](https://core.telegram.org/bots/api#getme) — `has_topics_enabled` and `allows_users_to_create_topics` for private bot chats.
+- [`Message`](https://core.telegram.org/bots/api#message) — `message_thread_id`, `is_topic_message`, sender/forward fields, and alternate `business_connection_id` / `guest_query_id` namespaces; current docs include private chats with bot topic mode.
 - [`sendMessage`](https://core.telegram.org/bots/api#sendmessage)
 - [`createForumTopic`](https://core.telegram.org/bots/api#createforumtopic)
 - [`editForumTopic`](https://core.telegram.org/bots/api#editforumtopic)
 - [`getWebhookInfo`](https://core.telegram.org/bots/api#getwebhookinfo)
 - [`getChat`](https://core.telegram.org/bots/api#getchat)
-- [`getChatMember`](https://core.telegram.org/bots/api#getchatmember)
+- [Redacted private-topic prerequisite checkpoint](spikes/telegram-private-topics.md) — read-only evidence from the newly provisioned development bot; no mutation or production enablement.
 - [Bots FAQ: privacy mode](https://core.telegram.org/bots/faq#what-messages-will-my-bot-get)
 
 Important conclusions derived from the documented API:
 
 - calling `getUpdates` with `offset > update_id` confirms earlier updates;
-- `createForumTopic` has no caller-provided idempotency key;
+- bots can enable forum topic mode in private chats; this is advertised by `getMe.has_topics_enabled`, while `getChat` still reports `type=private` rather than a forum supergroup;
+- `createForumTopic` supports a private chat with a user and has no caller-provided idempotency key;
 - Telegram has no reliable Bot API method to enumerate/search every forum topic;
 - `sendMessage` has no caller-provided idempotency key;
 - a configured webhook and `getUpdates` are mutually exclusive;
