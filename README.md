@@ -133,7 +133,7 @@ The transport-only Herdr SDK was delivered before the bridge contract gates. It 
 Telegram bridge product phases remain blocked until all three Phase 0 contract families pass:
 
 - atomic expected-session behavior for explicit `agent.prompt.target`, including occupant replacement races (proven for the temporary fork, not yet ordinary upstream Herdr);
-- exact `systemd --user` and Herdr plugin disable/unlink lifecycle;
+- exact `systemd --user` and Herdr plugin disable/unlink lifecycle (descriptor/restart and sequential denial proven; atomic revocation race remains blocked);
 - Telegram forum prerequisites and operator recovery;
 
 Implementation proceeds TDD-first, one focused PR at a time, with separate specification and quality reviews. Agents must not publish, merge, or enable the bridge against production Telegram without explicit human approval.

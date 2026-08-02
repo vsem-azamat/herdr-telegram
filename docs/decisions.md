@@ -159,3 +159,13 @@ See `technology.md`.
 **Migration:** When ordinary upstream Herdr ships an equivalent accepted contract, remove the fork installation requirement and validate its advertised wire behavior. Keep the stable-session routing model; adapt only the capability/wire compatibility layer if upstream chooses a different shape.
 
 **Rejected:** Pane read followed by unconditional prompt, direct provider transcript/session scraping, and silently assuming every protocol-18 server implements the fork extension.
+
+## D-020 — Plugin enabled-state checks are not a revocation fence
+
+**Decision:** Keep plugin disable/unlink as a mandatory mutation fence, but do not treat a daemon-side `plugin.list` check, registry-file read, filesystem watch, descriptor refresh, or service stop signal as proof of atomic revocation.
+
+**Reason:** The disposable lifecycle spike deterministically paused a companion after it observed the plugin enabled, disabled the plugin to completion, and then allowed the already-authorized modeled mutation to commit. This is the same read-then-mutate TOCTOU shape rejected for session routing.
+
+**Required contract:** Before product mutation routing, one authority must linearize plugin enabled/installed state with mutation acceptance. A possible server-owned precondition needs separate Herdr direction and protocol review; it is not approved merely by naming it here. Holding Herdr's private plugin-registry lock around a socket request is rejected because the lock/format is not public and can deadlock against the server actor processing both operations.
+
+**Consequence:** Sequential post-disable and post-unlink requests fail closed in the spike, but the Phase 0 lifecycle family remains blocked. Automatic Telegram-to-agent routing stays disabled.

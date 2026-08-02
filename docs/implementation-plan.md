@@ -24,7 +24,7 @@ A focused transport-only SDK checkpoint may precede these spikes. It may model a
 
 **Current checkpoint:** A disposable live probe verified that protocol 17 can prompt an explicit pane independently of focus. Tagged v0.7.5 schema/source and upstream development source at `73d92004f50d3f5fafe64e0f9b7fddbcf4d99965` (protocol 18) confirm that ordinary Herdr at that point had no atomic expected-session precondition. Do not repeat a client-side read-then-prompt experiment as if it could close that gap, including by scraping native provider IDs directly.
 
-[`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md) records the contract and required race tests. With explicit owner approval, a temporary personal Herdr fork implements it at `b610183d` in [fork-only draft PR #1](https://github.com/vsem-azamat/herdr/pull/1). The SDK models this extension behind the default-false `agent_prompt_expected_session` capability. [`spikes/herdr-expected-session-live-probe.md`](spikes/herdr-expected-session-live-probe.md) records the redacted disposable steps 5–8 evidence through the Go client, including focus independence, no rejected input after replacement, and native-session-pinned wait behavior. This passes the compare-and-submit gate for the temporary fork, not ordinary upstream acceptance: [Herdr Discussion #2016](https://github.com/ogulcancelik/herdr/discussions/2016) remains a direction request, and completion remains uncorrelated to a particular submitted turn.
+[`spikes/herdr-expected-session.md`](spikes/herdr-expected-session.md) records the contract and required race tests. With explicit owner approval, [personal-fork PR #1](https://github.com/vsem-azamat/herdr/pull/1) was independently reviewed and squash-merged to fork `master` at `a8758ff3`. The SDK models this extension behind the default-false `agent_prompt_expected_session` capability. [`spikes/herdr-expected-session-live-probe.md`](spikes/herdr-expected-session-live-probe.md) records the redacted disposable steps 5–8 evidence through the Go client, including focus independence, no rejected input after replacement, and native-session-pinned wait behavior. This passes the compare-and-submit gate for the temporary fork, not ordinary upstream acceptance: [Herdr Discussion #2016](https://github.com/herdrdev/herdr/discussions/2016) remains a direction request, and completion remains uncorrelated to a particular submitted turn.
 
 Prove on a disposable Herdr workspace that the server can protect the expected stable session atomically:
 
@@ -44,12 +44,16 @@ If current Herdr has no atomic expected-session precondition, stop normal-prompt
 
 ### Plugin/systemd lifecycle spike
 
-Prove:
+[`spikes/plugin-systemd-lifecycle.md`](spikes/plugin-systemd-lifecycle.md) records disposable Linux evidence that one-shot startup atomically publishes a restrictive descriptor, a separately installed transient systemd companion reads it, restart policy is bounded, sequential post-disable/post-unlink requests fail closed, Herdr restart refreshes process identity, and stale/insecure descriptors fail closed.
+
+The same spike deterministically proved an unresolved revocation race: an operation paused after observing `plugin.list` enabled can commit after `plugin disable` returns. Therefore the lifecycle family remains blocked until mutation acceptance and plugin installed/enabled state share an accepted linearization point. A separate preflight check is insufficient.
+
+Prove before this family passes:
 
 - one-shot startup can atomically register socket/config/state paths;
 - the separately installed daemon reads the descriptor;
 - systemd restart behavior is bounded;
-- plugin disable/unlink prevents a mutation;
+- plugin disable/unlink atomically fences mutation acceptance, including the coordinated race;
 - Herdr restart/handoff refreshes the descriptor;
 - stale descriptors fail closed.
 
